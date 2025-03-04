@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instruction Manual: Entering Stock Updates</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+        }
+        .step {
+            background-color: #f9f9f9;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #3498db;
+        }
+        .note {
+            background-color: #fffde7;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .tip {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .warning {
+            background-color: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            margin: 10px 0;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+        }
+        .footer {
+            margin-top: 50px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+        }
+        .manual-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .home-link {
+            display: flex;
+            align-items: center;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .home-link:hover {
+            color: #2980b9;
+        }
+        .home-link i {
+            margin-right: 5px;
+        }
+        .manual-index-link {
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: color 0.3s ease;
+        }
+        .manual-index-link:hover {
+            color: #3498db;
+        }
+    </style>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="manual-nav">
+        <a href="index.php" class="home-link">
+            <i class="bi bi-house-fill"></i> Return to Inventory Home
+        </a>
+        <a href="manual_index.html" class="manual-index-link">
+            <i class="bi bi-book"></i> All Manuals
+        </a>
+    </div>
+
+    <h1>Instruction Manual: Entering Stock Updates</h1>
+    
+    <div class="note">
+        <strong>Note:</strong> This manual provides step-by-step instructions for updating inventory levels when stock is added or removed.
+    </div>
+    
+    <h2>Overview</h2>
+    <p>
+        Keeping accurate inventory records requires updating stock levels whenever materials are added to or removed from inventory.
+        This process allows you to track inventory changes, maintain accurate stock counts, and monitor usage patterns.
+    </p>
+    
+    <h2>Methods for Entering Stock Updates</h2>
+    <p>There are two ways to enter stock updates:</p>
+    <ol>
+        <li>From the Stock Update Entry page (covered in this manual)</li>
+        <li>Directly from the Consumable Materials list (covered in the third manual)</li>
+    </ol>
+    
+    <div class="step">
+        <h3>Step 1: Access the Stock Update Entry Page</h3>
+        <p>
+            From the home page, click on the "Stock Updates" card, then click the "Add New Entry" button at the top of the page.
+        </p>
+    </div>
+    
+    <div class="step">
+        <h3>Step 2: Select an Item</h3>
+        <p>
+            From the dropdown menu, select the consumable material you want to update. Once selected, the system will automatically
+            populate the item details including:
+        </p>
+        <ul>
+            <li>Item Short Code</li>
+            <li>Normal Location</li>
+            <li>Current Quantity</li>
+            <li>Reorder Threshold</li>
+        </ul>
+    </div>
+    
+    <div class="step">
+        <h3>Step 3: Choose the Action Type</h3>
+        <p>Select whether you are:</p>
+        <ul>
+            <li><strong>Adding Items:</strong> Increasing inventory (e.g., when new stock arrives)</li>
+            <li><strong>Removing Items:</strong> Decreasing inventory (e.g., when items are used or taken)</li>
+        </ul>
+        <p>The default action is "Remove Items".</p>
+    </div>
+    
+    <div class="step">
+        <h3>Step 4: Enter the Quantity</h3>
+        <p>
+            Specify how many units are being added or removed. The minimum quantity is 1.
+        </p>
+        <div class="note">
+            <strong>Note:</strong> The system will automatically calculate the new total quantity based on your entry.
+        </div>
+    </div>
+    
+    <div class="step">
+        <h3>Step 5: Select the Employee</h3>
+        <p>
+            From the dropdown menu, select the employee who is adding or removing the items. This helps track who made each inventory change.
+        </p>
+    </div>
+    
+    <div class="step">
+        <h3>Step 6: Add Notes (Optional)</h3>
+        <p>
+            You can add notes about this inventory change, such as the reason for removal or the source of new items.
+        </p>
+    </div>
+    
+    <div class="step">
+        <h3>Step 7: Submit the Update</h3>
+        <p>
+            Review all information for accuracy, then click the "Submit Entry" button. If successful, you will be redirected to the
+            Stock Updates list where your new entry should appear at the top.
+        </p>
+    </div>
+    
+    <div class="warning">
+        <strong>Important:</strong> Once a stock update is submitted, the inventory quantity is immediately updated in the system.
+        If you make a mistake, you'll need to create a new entry to correct it.
+    </div>
+    
+    <h2>Understanding the Stock Updates List</h2>
+    <p>
+        After submitting an update, you'll see it in the Stock Updates list. This list shows:
+    </p>
+    <ul>
+        <li><strong>ID:</strong> The unique identifier for the update</li>
+        <li><strong>Short Code:</strong> The item's short code</li>
+        <li><strong>Name:</strong> The item's full name</li>
+        <li><strong>Location:</strong> Where the item is stored</li>
+        <li><strong>Added/Removed:</strong> How many units were added or removed</li>
+        <li><strong>New Quantity:</strong> The updated total quantity</li>
+        <li><strong>Employee:</strong> Who made the change</li>
+        <li><strong>Date:</strong> When the change was made</li>
+        <li><strong>Actions:</strong> Options to edit the entry</li>
+    </ul>
+    
+    <div class="tip">
+        <strong>Tip:</strong> If an item falls below its reorder threshold after a removal, it will be highlighted in the Consumable Materials list.
+    </div>
+    
+    <h2>Editing a Stock Update</h2>
+    <p>
+        If you need to edit a recent stock update:
+    </p>
+    <ol>
+        <li>Find the entry in the Stock Updates list</li>
+        <li>Click the "Edit" button in the Actions column</li>
+        <li>Make your changes in the form that appears</li>
+        <li>Click "Submit Entry" to save your changes</li>
+    </ol>
+    <div class="note">
+        <strong>Note:</strong> Editing a stock update will recalculate the inventory quantity based on your changes.
+    </div>
+    
+    <div class="footer">
+        <p>Inventory Management System - User Manual</p>
+        <p>Last Updated: <span id="current-date">Loading date...</span></p>
+    </div>
+    
+    <script>
+        // Fetch the current date from the server
+        fetch('manual_date.php')
+            .then(response => response.text())
+            .then(date => {
+                document.getElementById('current-date').textContent = date;
+            })
+            .catch(error => {
+                document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric'
+                });
+            });
+    </script>
+</body>
+</html> 
