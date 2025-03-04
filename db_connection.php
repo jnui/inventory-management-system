@@ -2,9 +2,9 @@
 // db_connection.php
 
 $host    = 'localhost';
-$db      = 'smccontr_inventory';
-$user    = 'smccontr_johnny';       // Replace with your database username
-$pass    = 'Fgtw3bnvG,a';       // Replace with your database password
+$db      = 'inventory';
+$user    = 'johnny';       // Replace with your database username
+$pass    = 'password';       // Replace with your database password
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
