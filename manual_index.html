@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management System - User Manuals</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            text-align: center;
+        }
+        .manual-card {
+            background-color: #f9f9f9;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 0 5px 5px 0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .manual-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .manual-card h2 {
+            color: #3498db;
+            margin-top: 0;
+        }
+        .manual-card p {
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .footer {
+            margin-top: 50px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+        }
+        .manual-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .home-link {
+            display: flex;
+            align-items: center;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .home-link:hover {
+            color: #2980b9;
+        }
+        .home-link i {
+            margin-right: 5px;
+        }
+    </style>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="manual-nav">
+        <a href="index.php" class="home-link">
+            <i class="bi bi-house-fill"></i> Return to Inventory Home
+        </a>
+    </div>
+
+    <h1>Inventory Management System<br>User Manuals</h1>
+    
+    <div class="manual-card">
+        <h2>1. Entering New Materials</h2>
+        <p>
+            Learn how to add new consumable materials to the inventory system. This guide covers all the steps from accessing the materials entry page to submitting the form, including explanations of all fields and options.
+        </p>
+        <a href="manual_new_materials.html" class="btn">Read Manual</a>
+    </div>
+    
+    <div class="manual-card">
+        <h2>2. Entering Stock Updates</h2>
+        <p>
+            Discover how to update inventory levels when stock is added or removed. This manual explains the process of recording inventory changes, selecting employees, and understanding the stock updates list.
+        </p>
+        <a href="manual_stock_updates.html" class="btn">Read Manual</a>
+    </div>
+    
+    <div class="manual-card">
+        <h2>3. Using the Consumable Materials Page</h2>
+        <p>
+            Master the Consumable Materials page to efficiently find items and make quick stock changes. Learn about filtering, searching, and using the "Stock Chg" button to update inventory directly from the materials list.
+        </p>
+        <a href="manual_consumable_materials.html" class="btn">Read Manual</a>
+    </div>
+    
+    <div class="footer">
+        <p>Inventory Management System - User Manuals</p>
+        <p>Last Updated: <span id="current-date">Loading date...</span></p>
+    </div>
+    
+    <script>
+        // Fetch the current date from the server
+        fetch('manual_date.php')
+            .then(response => response.text())
+            .then(date => {
+                document.getElementById('current-date').textContent = date;
+            })
+            .catch(error => {
+                document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric'
+                });
+            });
+    </script>
+</body>
+</html> 

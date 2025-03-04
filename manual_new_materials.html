@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instruction Manual: Entering New Materials</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2980b9;
+            margin-top: 30px;
+        }
+        .step {
+            background-color: #f9f9f9;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 5px 5px 0;
+        }
+        .step h3 {
+            margin-top: 0;
+            color: #3498db;
+        }
+        .note {
+            background-color: #fffde7;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .tip {
+            background-color: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+            margin: 10px 0;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: Consolas, Monaco, 'Andale Mono', monospace;
+        }
+        .footer {
+            margin-top: 50px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #777;
+        }
+        .manual-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .home-link {
+            display: flex;
+            align-items: center;
+            color: #3498db;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        .home-link:hover {
+            color: #2980b9;
+        }
+        .home-link i {
+            margin-right: 5px;
+        }
+        .manual-index-link {
+            color: #6c757d;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: color 0.3s ease;
+        }
+        .manual-index-link:hover {
+            color: #3498db;
+        }
+    </style>
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="manual-nav">
+        <a href="index.php" class="home-link">
+            <i class="bi bi-house-fill"></i> Return to Inventory Home
+        </a>
+        <a href="manual_index.html" class="manual-index-link">
+            <i class="bi bi-book"></i> All Manuals
+        </a>
+    </div>
+
+    <h1>Instruction Manual: Entering New Materials</h1>
+    
+    <div class="note">
+        <strong>Note:</strong> This manual provides step-by-step instructions for adding new consumable materials to the inventory system.
+    </div>
+    
+    <h2>Overview</h2>
+    <p>
+        Adding new materials to the inventory system is essential for tracking stock levels and managing reordering. 
+        This process allows you to define important details such as item name, type, location, and reorder thresholds.
+    </p>
+    
+    <div class="step">
+        <h3>Step 1: Access the Materials Entry Page</h3>
+        <p>
+            From the home page, click on the "Consumable Materials" card, then click the "Add Material" button at the top of the page.
+        </p>
+    </div>
+    
+    <div class="step">
+        <h3>Step 2: Enter Basic Material Information</h3>
+        <p>Fill in the following required fields:</p>
+        <ul>
+            <li><strong>Item Type:</strong> Select the appropriate category for the material</li>
+            <li><strong>Item Name:</strong> Enter a descriptive name for the material</li>
+            <li><strong>Item Short Code:</strong> Enter a brief code for quick identification</li>
+            <li><strong>Normal Location:</strong> Select where the item is typically stored</li>
+        </ul>
+    </div>
+    
+    <div class="step">
+        <h3>Step 3: Enter Quantity Information</h3>
+        <p>Specify the quantity details:</p>
+        <ul>
+            <li><strong>Whole Quantity:</strong> Enter the current stock level</li>
+            <li><strong>Reorder Threshold:</strong> Set the minimum quantity at which to reorder</li>
+        </ul>
+        <p>When stock falls below the reorder threshold, the item will be highlighted in the materials list.</p>
+    </div>
+    
+    <div class="step">
+        <h3>Step 4: Enter Additional Details (Optional)</h3>
+        <p>You may also provide:</p>
+        <ul>
+            <li><strong>Item Description:</strong> Detailed information about the material</li>
+            <li><strong>Units (Whole):</strong> The unit of measurement for whole items (e.g., "box", "case")</li>
+            <li><strong>Units (Part):</strong> The unit for individual parts (e.g., "sheet", "piece")</li>
+            <li><strong>Parts Per Whole:</strong> How many individual parts make up one whole unit</li>
+        </ul>
+    </div>
+    
+    <div class="step">
+        <h3>Step 5: Submit the Form</h3>
+        <p>
+            Review all entered information for accuracy, then click the "Submit" button at the bottom of the form.
+            If successful, you will be redirected to the materials list where your new item should appear.
+        </p>
+    </div>
+    
+    <div class="tip">
+        <strong>Tip:</strong> Items that need reordering (below threshold) will be highlighted in yellow in the materials list.
+    </div>
+    
+    <h2>Field Descriptions</h2>
+    
+    <h3>Required Fields</h3>
+    <ul>
+        <li><strong>Item Type:</strong> Category of the material (e.g., Paper, Ink, Tool)</li>
+        <li><strong>Item Name:</strong> The full name of the material</li>
+        <li><strong>Item Short Code:</strong> A brief identifier code</li>
+        <li><strong>Normal Location:</strong> Where the item is typically stored</li>
+        <li><strong>Whole Quantity:</strong> Current stock level</li>
+    </ul>
+    
+    <h3>Optional Fields</h3>
+    <ul>
+        <li><strong>Item Description:</strong> Detailed description of the material</li>
+        <li><strong>Reorder Threshold:</strong> Minimum quantity before reordering is needed</li>
+        <li><strong>Units (Whole):</strong> Unit of measurement for whole items</li>
+        <li><strong>Units (Part):</strong> Unit of measurement for individual parts</li>
+        <li><strong>Parts Per Whole:</strong> Number of parts in one whole unit</li>
+    </ul>
+    
+    <div class="note">
+        <strong>Important:</strong> Once a material is added, you can edit its details later by clicking the "Edit" button next to the item in the materials list.
+    </div>
+    
+    <div class="footer">
+        <p>Inventory Management System - User Manual</p>
+        <p>Last Updated: <span id="current-date">Loading date...</span></p>
+    </div>
+    
+    <script>
+        // Fetch the current date from the server
+        fetch('manual_date.php')
+            .then(response => response.text())
+            .then(date => {
+                document.getElementById('current-date').textContent = date;
+            })
+            .catch(error => {
+                document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric'
+                });
+            });
+    </script>
+</body>
+</html> 
