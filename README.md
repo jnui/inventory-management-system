@@ -31,7 +31,7 @@ The system includes detailed instruction manuals:
 ## Installation
 
 1. Clone this repository
-2. Import the database schema from `database/schema.sql`
+2. Import the database schema from `smccontr_inventory.sql`
 3. Configure database connection in `db_connection.php`
 4. Access the application through your web server
 
