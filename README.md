@@ -2,6 +2,8 @@
 
 A web-based inventory management system for tracking consumable materials, stock levels, and inventory changes.
 
+designed to be optimal on an ipad.
+
 ## Features
 
 - **Material Management**: Add, edit, and delete consumable materials
