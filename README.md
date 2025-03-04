@@ -12,6 +12,9 @@ designed to be optimal on an ipad.
 - **Search & Filter**: Quickly find items using search and column filtering
 - **Data Export**: Export inventory data to CSV for use in Excel
 - **User Documentation**: Comprehensive instruction manuals for all system functions
+<img width="1127" alt="Screenshot 2025-03-04 at 12 50 27" src="https://github.com/user-attachments/assets/9819934c-a6dd-4c98-a95a-8877b588ac0b" />
+<img width="1127" alt="Screenshot 2025-03-04 at 12 50 37" src="https://github.com/user-attachments/assets/21af31a0-bca5-4588-92d2-618d3f6324d8" />
+<img width="1265" alt="Screenshot 2025-03-04 at 12 53 18" src="https://github.com/user-attachments/assets/4cd851b8-4554-4dd8-ae7a-48c1ae2d7c47" />
 
 ## Documentation
 
