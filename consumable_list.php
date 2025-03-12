@@ -33,6 +33,10 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Opera compatibility -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+    <link rel="alternate icon" type="image/x-icon" href="assets/img/favicon.ico">
+    <link rel="mask-icon" href="assets/img/favicon.svg" color="#0d6efd">
     <!-- jQuery (required for DataTables) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap CSS for responsiveness -->

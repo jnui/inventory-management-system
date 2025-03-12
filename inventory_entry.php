@@ -3,6 +3,12 @@
 // Include authentication check
 require_once 'auth_check.php';
 
+// Check if this is a natural language submission
+if (isset($_GET['nl']) && isset($_SESSION['nl_form_data'])) {
+    $_POST = array_merge($_POST, $_SESSION['nl_form_data']);
+    unset($_SESSION['nl_form_data']);
+}
+
 // Process the form submission if POST data is present.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
@@ -170,7 +176,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Commit the transaction
         $pdo->commit();
         
-        header("Location: inventory.php");
+        // Debug log
+        error_log("Redirecting to consumable_list with ID: " . $consumable['id']);
+        
+        // Redirect to consumable list with the item ID for scrolling
+        header("Location: consumable_list.php?scroll_to=" . $consumable['id']);
         exit;
     } catch (Exception $e) {
         // Roll back the transaction on error
@@ -249,11 +259,17 @@ try {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Add Inventory Entry</title>
+    <title>Stock Update Entry</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Opera compatibility -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <!-- Bootstrap CSS CDN -->
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+    <link rel="alternate icon" type="image/x-icon" href="assets/img/favicon.ico">
+    <link rel="mask-icon" href="assets/img/favicon.svg" color="#0d6efd">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
