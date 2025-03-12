@@ -867,7 +867,7 @@ try {
                 dom: 'rt<"d-flex justify-content-between"ip>',
                 order: [[2, 'asc']], // Set default sort to column 2 (Item Name) in ascending order
                 columnDefs: [
-                    { visible: false, targets: [ 6, 7, 8, 10, 11] },
+                    { visible: false, targets: [ 0, 1, 6, 7, 8, 10, 11] },
                     { width: "140px", targets: -1 },
                     { width: "50px", targets: 0 },
                     { width: "100px", targets: 1 },
@@ -1157,13 +1157,25 @@ try {
                             $formattedDate = $date->format('M j g:ia');
                         }
                         
+                        // Format whole quantity with units
+                        $wholeQuantityDisplay = 'N/A';
+                        if (isset($item['whole_quantity'])) {
+                            if (strtolower(trim($item['item_units_whole'])) === 'each') {
+                                // If units is "each", use item type (make first letter lowercase for readability)
+                                $type = lcfirst($item['item_type']);
+                                $wholeQuantityDisplay = $item['whole_quantity'] . ' ' . ($item['whole_quantity'] == 1 ? $type : $type . 's');
+                            } else {
+                                // Otherwise use the units_whole
+                                $units = $item['item_units_whole'];
+                                $wholeQuantityDisplay = $item['whole_quantity'] . ' ' . ($item['whole_quantity'] == 1 ? $units : $units . 's');
+                            }
+                        }
+                        
                         // Check if reordering is needed
                         $needsReorder = false;
                         if (isset($item['reorder_threshold']) && $item['reorder_threshold'] > 0 && 
                             isset($item['whole_quantity']) && $item['whole_quantity'] < $item['reorder_threshold']) {
                             $needsReorder = true;
-                            // Add debug comment
-                            echo "<!-- Debug: Item {$item['id']} needs reorder. Whole Quantity: {$item['whole_quantity']}, Threshold: {$item['reorder_threshold']} -->";
                         }
                     ?>
                     <tr class="<?= $needsReorder ? 'reorder-needed' : '' ?>" data-needs-reorder="<?= $needsReorder ? 'true' : 'false' ?>">
@@ -1171,7 +1183,7 @@ try {
                         <td><?= htmlspecialchars($item['item_type']) ?></td>
                         <td><?= htmlspecialchars($item['item_name']) ?></td>
                         <td><?= htmlspecialchars($item['normal_location']) ?></td>
-                        <td><?= htmlspecialchars($item['whole_quantity']) ?></td>
+                        <td><?= htmlspecialchars($wholeQuantityDisplay) ?></td>
                         <td><?= htmlspecialchars($item['reorder_threshold']) ?></td>
                         <td><?= htmlspecialchars($item['item_units_whole']) ?></td>
                         <td><?= htmlspecialchars($item['item_units_part']) ?></td>
