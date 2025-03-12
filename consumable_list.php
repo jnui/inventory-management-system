@@ -54,90 +54,111 @@ try {
     <style>
         /* Custom styles for sticky header */
         .dataTables_wrapper .dataTables_scrollHead {
-            position: sticky;
-            top: 0px; /* Already set to 0px */
-            z-index: 10;
-            background-color: #fff;
+            position: sticky !important;
+            z-index: 10 !important;
+            background-color: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
         
-        /* Fix for first row being covered */
-        .dataTables_wrapper .dataTables_scrollBody {
-            padding-top: 0px !important; /* Changed from 00px to 0px for clarity */
-            margin-top: 0px !important;
+        /* Fix for header text being cut off */
+        .dataTables_scrollHead table {
+            margin: 0 !important;
+        }
+        
+        .dataTables_scrollHead table thead th {
+            padding: 8px !important;
+            vertical-align: middle !important;
+            line-height: 1.2 !important;
+            height: auto !important;
+            min-height: 40px !important;
+            background-color: #fff !important;
         }
         
         /* Additional styling for DataTables */
         #consumablesTable_wrapper {
-            margin-top: 0px;
+            margin: 0 !important;
+            padding: 0 !important;
             width: 100% !important;
-            overflow-x: auto !important;
         }
         
-        /* Fix for navigation bar in Opera */
-        .navigation-bar {
+        /* Fix for first row being covered */
+        .dataTables_wrapper .dataTables_scrollBody {
+            padding-top: 0 !important;
+            margin-top: 0 !important;
+        }
+        
+        /* Action row adjustments */
+        .action-row {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            gap: 8px !important;
+            margin-bottom: 10px !important;
+            align-items: center !important;
+            width: 100% !important;
+            justify-content: space-between !important;
+            padding: 0 5px !important;
+        }
+        
+        .button-group {
+            display: flex !important;
+            gap: 8px !important;
+            flex-shrink: 0 !important;
+            align-items: center !important;
+        }
+        
+        .left-buttons {
+            margin-right: 8px !important;
+        }
+        
+        .right-buttons {
+            display: flex !important;
+            gap: 8px !important;
+            margin-left: 8px !important;
+        }
+        
+        .search-container {
+            flex: 1 !important;
+            min-width: 150px !important;
+            max-width: none !important;
+            margin: 0 8px !important;
+        }
+        
+        /* Ensure buttons don't wrap or shrink */
+        .btn {
+            flex-shrink: 0 !important;
+            white-space: nowrap !important;
+        }
+        
+        /* Style for the search container */
+        .search-container {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            width: 100%;
-            padding: 10px 15px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            background-color: #f8f9fa;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            height: 60px; /* Fixed height for the navigation bar */
+            gap: 10px;
+            flex-grow: 1;
+            min-width: 200px;
+        }
+        
+        /* Ensure search input doesn't grow too large */
+        .search-container input {
+            max-width: 300px;
+        }
+        
+        /* Style for the buttons container */
+        .buttons-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
         }
         
         /* Ensure content doesn't get hidden under the navigation bar */
         .content-container {
-            padding-top: 80px; /* Increased padding to prevent overlap with navigation bar */
-        }
-        
-        .action-row {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 5px; /* Reduce gap between elements */
-            margin-bottom: 5px !important; /* Reduce bottom margin */
-            justify-content: flex-start !important; /* Align items to the left */
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        /* Custom table controls container */
-        #custom-table-controls {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        /* Style for the search box */
-        #custom-search {
-            display: inline-flex;
-            align-items: center;
-        }
-        
-        #custom-search label {
-            margin-right: 5px;
-            margin-bottom: 0;
-        }
-        
-        #custom-search input {
-            padding: 4px 8px;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-        }
-        
-        /* Make item name column wider */
-        #consumablesTable th:nth-child(3),
-        #consumablesTable td:nth-child(3) {
-            min-width: 200px;
-            width: 20%;
+            width: 100% !important;
+            overflow-x: visible !important;
+            padding-top: 60px !important; /* Match navbar height */
+            padding-bottom: 60px !important;
         }
         
         /* Style for the column visibility button */
@@ -203,34 +224,6 @@ try {
             padding: 0.5rem !important;
         }
         
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .action-row {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            #custom-table-controls {
-                margin-top: 10px;
-                width: 100%;
-                flex-wrap: wrap;
-            }
-            
-            #custom-search {
-                width: 100%;
-                margin-top: 10px;
-            }
-            
-            #custom-search input {
-                width: 100%;
-            }
-            
-            .dt-buttons {
-                margin-top: 10px;
-                margin-left: 0;
-            }
-        }
-        
         /* Style for the dropdown menu */
         .dropdown-menu {
             max-height: 400px;
@@ -257,7 +250,18 @@ try {
         
         /* Additional spacing for the table */
         #consumablesTable {
-            margin-top: 5px !important;
+            margin: 0 !important;
+            width: 100% !important;
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+        }
+        
+        /* Ensure header has enough height */
+        #consumablesTable thead th {
+            height: auto !important;
+            min-height: 40px !important;
+            white-space: nowrap !important;
+            vertical-align: middle !important;
         }
         
         /* Ensure the scrollable area has enough space */
@@ -277,6 +281,33 @@ try {
             -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
             padding-right: 0 !important; /* Remove right padding to prevent cutoff */
             margin-right: 0 !important;
+        }
+        
+        /* Style for the footer */
+        .dataTables_info {
+            background-color: #f8f9fa !important;
+            padding: 0px 15px 10px 15px!important;
+            /* border-top: 1px solid #dee2e6 !important;
+            border-bottom: 1px solid #dee2e6 !important; */
+            margin-top: 0px !important;
+        }
+        
+        /* Footer wrapper styles */
+        .footer-wrapper {
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            background-color: #f8f9fa !important;
+            border-top: 1px solidrgb(139, 151, 163) !important;
+            border-bottom: 1px solid #dee2e6 !important;
+            z-index: 1000 !important;
+            padding: 0px 5px !important;
+        }
+        
+        /* Adjust table wrapper to account for fixed footer */
+        .dataTables_wrapper {
+            padding-bottom: 0px !important; /* Height of footer + some padding */
         }
         
         /* Make sure the table takes full width and allows scrolling on iPad */
@@ -395,6 +426,11 @@ try {
             border-left: 5px solid #fbbf24 !important; /* Yellow left border */
         }
         
+        /* Highlight class for flashing effect */
+        .highlight-row td {
+            background-color: #ffb6c1 !important; /* Pink background */
+        }
+        
         /* Ensure proper highlighting with DataTables striping */
         .reorder-row.odd {
             background-color: #fffbeb !important;
@@ -419,20 +455,73 @@ try {
         
         /* iPad specific adjustments */
         @media only screen and (min-width: 768px) and (max-width: 1024px) {
-            .dataTables_wrapper {
-                overflow-x: auto !important;
+            /* Button layout fixes */
+            .action-row {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                gap: 8px !important;
+                margin-bottom: 10px !important;
+                align-items: center !important;
                 width: 100% !important;
+                justify-content: space-between !important;
             }
-            
+
+            .button-group {
+                display: flex !important;
+                gap: 8px !important;
+                flex-shrink: 0 !important;
+                align-items: center !important;
+            }
+
+            .left-buttons {
+                margin-right: 8px !important;
+            }
+
+            .right-buttons {
+                display: flex !important;
+                gap: 8px !important;
+                margin-left: 8px !important;
+            }
+
+            .search-container {
+                flex: 1 !important;
+                min-width: 150px !important;
+                max-width: none !important;
+                margin: 0 8px !important;
+            }
+
+            /* Ensure buttons don't wrap or shrink */
+            .btn {
+                flex-shrink: 0 !important;
+                white-space: nowrap !important;
+            }
+
+            /* Fix footer spacing */
+            .dataTables_wrapper {
+                margin-bottom: 50px !important;
+            }
+
+            .footer-wrapper {
+                margin-top: 0 !important;
+                height: 50px !important;
+                display: flex !important;
+                align-items: center !important;
+                border-top: 1px solid #dee2e6 !important;
+            }
+
+            /* Table responsiveness */
             .table-responsive {
                 overflow-x: auto !important;
-                -webkit-overflow-scrolling: touch;
+                -webkit-overflow-scrolling: touch !important;
             }
-            
+
             .container.content-container {
                 max-width: 100% !important;
                 padding-right: 5px !important;
                 padding-left: 5px !important;
+                width: 100% !important;
+                overflow-x: hidden !important;
             }
         }
         
@@ -462,336 +551,510 @@ try {
             min-width: 140px;
             white-space: nowrap;
         }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 767px) {
+            .footer-wrapper {
+                padding: 5px 5px !important;
+            }
+            
+            .dataTables_info {
+                padding: 5px 10px !important;
+                font-size: 0.9em !important;
+            }
+            
+            .content-container {
+                padding: 5px !important;
+            }
+            
+            .action-row {
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                gap: 5px !important;
+                margin-bottom: 5px !important;
+                justify-content: space-between !important;
+                width: 100% !important;
+            }
+            
+            .search-container {
+                flex: 1 !important;
+                min-width: 0 !important;
+                margin: 0 5px !important;
+                order: 0 !important;
+            }
+            
+            .search-container input {
+                padding: 4px 8px !important;
+                font-size: 14px !important;
+                height: 32px !important;
+            }
+            
+            /* Group non-search elements */
+            .button-group {
+                display: flex !important;
+                gap: 5px !important;
+                flex-shrink: 0 !important;
+            }
+            
+            /* Make utility buttons part of main row */
+            .utility-buttons {
+                display: flex !important;
+                gap: 5px !important;
+                margin: 0 !important;
+            }
+            
+            #consumablesTable tbody tr td {
+                padding: 8px 5px !important;
+            }
+            
+            .dataTables_wrapper {
+                margin-bottom: 40px !important;
+            }
+            
+            /* Optimize table height for mobile */
+            .dataTables_scrollBody {
+                height: calc(100vh - 200px) !important;
+                min-height: 225px !important; /* 5 rows minimum */
+            }
+            
+            /* Reduce action row spacing on mobile */
+            .action-row {
+                gap: 5px !important;
+                margin-bottom: 5px !important;
+            }
+            
+            /* Make buttons more compact on mobile */
+            .btn-sm {
+                padding: 0.2rem 0.4rem !important;
+                font-size: 0.7rem !important;
+            }
+            
+            /* Hide button text on mobile */
+            .btn-mobile-icon .btn-text {
+                display: none !important;
+            }
+            
+            /* Make buttons square and compact */
+            .btn-mobile-icon {
+                width: 32px !important;
+                height: 32px !important;
+                padding: 4px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                font-size: 1rem !important;
+            }
+            
+            /* Adjust icon size */
+            .btn-mobile-icon i {
+                font-size: 1.1rem !important;
+            }
+            
+            /* Make action buttons more compact */
+            .action-buttons-cell .btn {
+                width: 32px !important;
+                height: 32px !important;
+                padding: 4px !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            
+            .action-buttons-cell .btn-text {
+                display: none !important;
+            }
+            
+            /* Adjust dropdown button */
+            #columnToggleButton {
+                width: 32px !important;
+                height: 32px !important;
+                padding: 4px !important;
+            }
+            
+            #columnToggleButton::after {
+                display: none !important;
+            }
+        }
+        
+        /* iPad landscape mode specific adjustments */
+        @media only screen 
+        and (min-device-width: 768px) 
+        and (max-device-width: 1024px) 
+        and (orientation: landscape) {
+            /* Button layout fixes */
+            .action-row {
+                display: flex !important;
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                gap: 8px !important;
+                margin-bottom: 10px !important;
+                align-items: center !important;
+                width: 100% !important;
+                justify-content: flex-start !important;
+                padding: 0 5px !important;
+            }
+
+            .button-group {
+                display: flex !important;
+                gap: 8px !important;
+                flex-shrink: 0 !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                margin: 0 !important;
+            }
+
+            .search-container {
+                flex: 0 1 300px !important;
+                min-width: 150px !important;
+                margin: 0 8px !important;
+            }
+
+            /* Ensure buttons don't wrap */
+            .btn {
+                padding: 6px 12px !important;
+                font-size: 14px !important;
+                flex-shrink: 0 !important;
+                white-space: nowrap !important;
+                margin: 0 !important;
+            }
+
+            /* Fix footer spacing */
+            .dataTables_wrapper {
+                margin-bottom: 50px !important;
+                padding-bottom: 0 !important;
+            }
+
+            .footer-wrapper {
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                height: 50px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #f8f9fa !important;
+                border-top: 1px solid #dee2e6 !important;
+                z-index: 1000 !important;
+                display: flex !important;
+                align-items: center !important;
+            }
+
+            .justify-content-between {
+                margin: 0 !important;
+                padding: 0 !important;
+                height: 50px !important;
+                display: flex !important;
+                align-items: center !important;
+                width: 100% !important;
+            }
+
+            /* Table responsiveness */
+            .table-responsive {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                margin-bottom: 0 !important;
+            }
+
+            .container.content-container {
+                max-width: 100% !important;
+                padding-right: 5px !important;
+                padding-left: 5px !important;
+                width: 100% !important;
+                overflow-x: hidden !important;
+                margin-bottom: 50px !important;
+            }
+
+            /* Ensure DataTables info and pagination align properly */
+            .dataTables_info {
+                padding: 15px !important;
+                margin: 0 !important;
+                line-height: 20px !important;
+                background-color: #f8f9fa !important;
+            }
+
+            /* Force right buttons to stay in line */
+            .right-buttons {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 8px !important;
+                margin: 0 !important;
+                flex-wrap: nowrap !important;
+                flex-shrink: 0 !important;
+            }
+
+            /* Ensure Smart Entry button stays with other buttons */
+            .right-buttons .btn {
+                margin: 0 !important;
+                flex-shrink: 0 !important;
+            }
+
+            /* Override any conflicting styles */
+            .utility-buttons {
+                display: flex !important;
+                flex-direction: row !important;
+                gap: 8px !important;
+                margin: 0 !important;
+                flex-wrap: nowrap !important;
+            }
+        }
+        
+        /* Navigation bar should be above all */
+        .navigation-bar {
+            z-index: 1000 !important;
+        }
     </style>
     <script>
         $(document).ready(function() {
-            // Check DataTables version
-            if ($.fn.dataTable) {
-                console.log("DataTables version:", $.fn.dataTable.version);
-            } else {
-                console.error("DataTables is not loaded!");
+            // Function to calculate available height for the table
+            function calculateTableHeight() {
+                const windowHeight = window.innerHeight;
+                const navbarHeight = 60; // Height of the navigation bar
+                const actionRowHeight = $('.action-row').outerHeight() || 0;
+                const padding = 20; // Some padding at the bottom
+                
+                // Calculate available height
+                const availableHeight = windowHeight - navbarHeight - actionRowHeight - padding;
+                
+                // Ensure minimum height of 300px
+                return Math.max(availableHeight, 300);
             }
+
+            // Define applyHighlighting function first
+            function applyHighlighting() {
+                $('#consumablesTable tbody tr').each(function() {
+                    var row = $(this);
+                    if (row.attr('data-needs-reorder') === 'true') {
+                        row.addClass('reorder-needed');
+                        // Apply styles directly to ensure they take effect
+                        row.css({
+                            'height': 'auto !important',
+                            'min-height': '45px !important'
+                        });
+                        row.find('td').css({
+                            'height': 'auto !important',
+                            'min-height': '45px !important',
+                            'line-height': '1.5 !important',
+                            'padding': '0.5rem !important',
+                            'background-color': '#fff3cd !important',
+                            'font-weight': 'bold !important'
+                        });
+                    } else {
+                        row.removeClass('reorder-needed');
+                        // Reset styles for non-reorder rows
+                        row.css({
+                            'height': 'auto !important',
+                            'min-height': '45px !important'
+                        });
+                        row.find('td').css({
+                            'height': 'auto !important',
+                            'min-height': '45px !important',
+                            'line-height': '1.5 !important',
+                            'padding': '0.5rem !important'
+                        });
+                    }
+                });
+            }
+
+            // Initialize DataTables
+            var table = $('#consumablesTable').DataTable({
+                scrollCollapse: true,
+                scrollX: true,
+                paging: false,
+                ordering: true,
+                info: true,
+                responsive: true,
+                autoWidth: false,
+                dom: 'rt<"d-flex justify-content-between"ip>',
+                order: [[2, 'asc']], // Set default sort to column 2 (Item Name) in ascending order
+                columnDefs: [
+                    { visible: false, targets: [ 6, 7, 8, 10, 11] },
+                    { width: "140px", targets: -1 },
+                    { width: "50px", targets: 0 },
+                    { width: "100px", targets: 1 },
+                    { width: "200px", targets: 2 },
+                    { width: "150px", targets: 3 },
+                    { width: "100px", targets: 4 },
+                    { width: "100px", targets: 5 },
+                    { width: "100px", targets: 9 },
+                    { width: "200px", targets: 10 },
+                    { width: "120px", targets: 11 }
+                ],
+                drawCallback: function() {
+                    // Check for scroll_to parameter in URL
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const scrollToId = urlParams.get('scroll_to');
+                    
+                    if (scrollToId) {
+                        console.log("Found scroll_to parameter:", scrollToId);
+                        
+                        // Find the row by ID using jQuery
+                        const $rows = $('#consumablesTable tbody tr');
+                        const $targetRow = $rows.filter(function() {
+                            return $(this).find('td:first').text().trim() === scrollToId;
+                        });
+                        
+                        if ($targetRow.length) {
+                            console.log("Found matching row");
+                            
+                            // Get container
+                            const $container = $('.dataTables_scrollBody');
+                            
+                            // Calculate position
+                            const offset = $targetRow.position().top;
+                            console.log("Row offset:", offset);
+                            
+                            // Scroll to row first, then start flashing
+                            $container.animate({
+                                scrollTop: offset - 100
+                            }, 500, function() {
+                                // After scrolling completes, start the flashing sequence
+                                console.log("Starting flash sequence");
+                                let flashCount = 0;
+                                const maxFlashes = 6; // 3 complete cycles (pink-default-pink-default-pink-default)
+                                
+                                function flashRow() {
+                                    if (flashCount < maxFlashes) {
+                                        if (flashCount % 2 === 0) {
+                                            console.log("Flash ON:", flashCount);
+                                            $targetRow.addClass('highlight-row');
+                                        } else {
+                                            console.log("Flash OFF:", flashCount);
+                                            $targetRow.removeClass('highlight-row');
+                                        }
+                                        flashCount++;
+                                        // Schedule next flash with 250ms interval for faster flashing
+                                        setTimeout(flashRow, 250);
+                                    }
+                                }
+                                
+                                // Start the flashing sequence
+                                flashRow();
+                            });
+                        } else {
+                            console.error("Could not find row with ID:", scrollToId);
+                        }
+                    }
+                    
+                    // Rest of your existing drawCallback code
+                    $('.dataTables_scrollHead').css('margin-bottom', '5px');
+                    $('.dataTables_scrollBody').css('padding-top', '0px');
+                    $(this).css('width', '100%');
+                    
+                    // Apply highlighting
+                    applyHighlighting();
+                }
+            });
             
             try {
                 // Create a container for our action buttons
-                var actionContainer = $('<div class="action-row mb-3 d-flex align-items-center"></div>');
+                var actionContainer = $('<div class="action-row"></div>');
                 
-                // Create an Add Material button
-                var addButton = $('<a href="consumable_entry.php" class="btn btn-primary">Add New Material</a>');
-                addButton.appendTo(actionContainer);
+                // Create left button group
+                var leftButtons = $('<div class="button-group left-buttons"></div>');
+                leftButtons.append($('<a href="consumable_entry.php" class="btn btn-primary btn-mobile-icon"><i class="bi bi-plus-lg"></i><span class="btn-text"> Add New Material</span></a>'));
                 
-                // Create buttons container
-                var buttonsContainer = $('<div class="buttons-container ms-2 btn-group"></div>');
+                // Create column visibility dropdown with proper Bootstrap structure
+                var columnToggleHtml = `
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-secondary dropdown-toggle btn-mobile-icon" type="button" id="columnToggleButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-layout-three-columns"></i><span class="btn-text"> Show/Hide Cols</span>
+                        </button>
+                        <ul class="dropdown-menu p-2" aria-labelledby="columnToggleButton" style="min-width: 200px;">
+                            <li><a class="dropdown-item" data-column="0">ID</a></li>
+                            <li><a class="dropdown-item" data-column="1">Item Type</a></li>
+                            <li><a class="dropdown-item" data-column="2">Item Name</a></li>
+                            <li><a class="dropdown-item" data-column="3">Normal Location</a></li>
+                            <li><a class="dropdown-item" data-column="4">Whole Quantity</a></li>
+                            <li><a class="dropdown-item" data-column="5">Reorder Threshold</a></li>
+                            <li><a class="dropdown-item" data-column="6">Units (Whole)</a></li>
+                            <li><a class="dropdown-item" data-column="7">Units (Part)</a></li>
+                            <li><a class="dropdown-item" data-column="8">Qty Parts Per Whole</a></li>
+                            <li><a class="dropdown-item" data-column="9">Total Part Units</a></li>
+                            <li><a class="dropdown-item" data-column="10">Composition Description</a></li>
+                            <li><a class="dropdown-item" data-column="11">Last Updated</a></li>
+                        </ul>
+                    </div>
+                `;
+                leftButtons.append($(columnToggleHtml));
                 
-                // Add Show/Hide Columns button
-                var colvisButton = $('<button class="btn btn-secondary">Show/Hide Columns</button>');
-                colvisButton.on('click', function(e) {
-                    e.stopPropagation();
-                    
-                    // Remove any existing dropdowns
-                    $('.column-visibility-dropdown').remove();
-                    
-                    // Create a dropdown with column visibility options
-                    var dropdown = $('<div class="dropdown-menu column-visibility-dropdown"></div>');
-                    
-                    // Add options for each column
+                // Initialize column visibility toggle
+                $(document).on('click', '.dropdown-item', function(e) {
+                    e.preventDefault();
+                    var column = table.column($(this).data('column'));
+                    column.visible(!column.visible());
+                    $(this).toggleClass('active');
+                });
+
+                // Set initial active state for visible columns
+                setTimeout(function() {
                     table.columns().every(function(index) {
-                        var column = this;
-                        var visible = column.visible();
-                        var name = $(column.header()).text();
-                        
-                        var item = $('<a class="dropdown-item"></a>');
-                        item.text(name);
-                        if (visible) {
-                            item.addClass('active');
+                        if (this.visible()) {
+                            $('.dropdown-item[data-column="' + index + '"]').addClass('active');
                         }
-                        
-                        item.on('click', function(e) {
-                            e.stopPropagation();
-                            column.visible(!visible);
-                            $(this).toggleClass('active');
-                        });
-                        
-                        dropdown.append(item);
                     });
-                    
-                    // Position the dropdown relative to the button
-                    var buttonPos = $(this).offset();
-                    dropdown.css({
-                        position: 'absolute',
-                        top: buttonPos.top + $(this).outerHeight(),
-                        left: buttonPos.left,
-                        zIndex: 1000,
-                        display: 'block',
-                        backgroundColor: '#fff',
-                        border: '1px solid rgba(0,0,0,.15)',
-                        borderRadius: '.25rem',
-                        padding: '.5rem 0',
-                        minWidth: '200px'
-                    });
-                    
-                    // Add the dropdown to the document
-                    $('body').append(dropdown);
-                    
-                    // Close the dropdown when clicking outside
-                    $(document).one('click', function() {
-                        dropdown.remove();
-                    });
-                    
-                    return false;
-                });
-                buttonsContainer.append(colvisButton);
+                }, 100);
                 
-                // Add Print button
-                var printButton = $('<button class="btn btn-sm btn-info ms-1"><i class="bi bi-printer"></i></button>');
-                printButton.attr('title', 'Print');
-                printButton.on('click', function() {
-                    // Create a new window for printing
-                    var printWindow = window.open('', '_blank');
-                    
-                    // Create the print content
-                    var printContent = '<html><head><title>Consumable Materials</title>';
-                    
-                    // Add styles
-                    printContent += '<style>';
-                    printContent += 'body { font-family: Arial, sans-serif; }';
-                    printContent += 'table { border-collapse: collapse; width: 100%; }';
-                    printContent += 'th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }';
-                    printContent += 'th { background-color: #f2f2f2; }';
-                    printContent += '.reorder-needed td { background-color: #fff3cd; font-weight: bold; }';
-                    printContent += 'tr { height: 100%; line-height: inherit; }';
-                    printContent += '@media print { .no-print { display: none; } }';
-                    printContent += '</style>';
-                    
-                    // Close the head and open the body
-                    printContent += '</head><body>';
-                    
-                    // Add a title
-                    printContent += '<h1>Consumable Materials</h1>';
-                    
-                    // Add a print date
-                    var now = new Date();
-                    printContent += '<p>Printed on: ' + now.toLocaleDateString() + ' ' + now.toLocaleTimeString() + '</p>';
-                    
-                    // Create a table with only visible columns
-                    printContent += '<table>';
-                    
-                    // Add the header row
-                    printContent += '<thead><tr>';
-                    $('#consumablesTable thead th:visible').each(function() {
-                        printContent += '<th>' + $(this).text() + '</th>';
-                    });
-                    printContent += '</tr></thead>';
-                    
-                    // Add the body rows
-                    printContent += '<tbody>';
-                    $('#consumablesTable tbody tr:visible').each(function() {
-                        var needsReorder = $(this).hasClass('reorder-needed');
-                        printContent += needsReorder ? '<tr class="reorder-needed">' : '<tr>';
-                        
-                        $(this).find('td:visible').each(function() {
-                            printContent += '<td>' + $(this).html() + '</td>';
-                        });
-                        printContent += '</tr>';
-                    });
-                    printContent += '</tbody>';
-                    
-                    // Close the table
-                    printContent += '</table>';
-                    
-                    // Add a print button
-                    printContent += '<div class="no-print" style="margin-top: 20px;">';
-                    printContent += '<button onclick="window.print()">Print</button>';
-                    printContent += '<button onclick="window.close()">Close</button>';
-                    printContent += '</div>';
-                    
-                    // Close the body and html
-                    printContent += '</body></html>';
-                    
-                    // Write the content to the new window
-                    printWindow.document.open();
-                    printWindow.document.write(printContent);
-                    printWindow.document.close();
-                    
-                    // Focus the new window
-                    printWindow.focus();
-                });
-                buttonsContainer.append(printButton);
+                // Create search group
+                var searchGroup = $('<div class="search-container"></div>');
+                var searchInput = $('<input type="search" class="form-control" placeholder="Search...">');
+                searchGroup.append(searchInput);
                 
-                // Add Excel button
-                var excelButton = $('<button class="btn btn-sm btn-success ms-1"><i class="bi bi-file-excel"></i></button>');
-                excelButton.attr('title', 'Export to Excel');
-                excelButton.on('click', function() {
-                    // Create a CSV string with BOM for Excel
-                    var csv = ['\ufeff']; // Add BOM for Excel
-                    
-                    // Get all visible headers
-                    var headers = [];
-                    $('#consumablesTable thead th:visible').each(function() {
-                        headers.push('"' + $(this).text().replace(/"/g, '""') + '"');
-                    });
-                    csv.push(headers.join(','));
-                    
-                    // Get all visible rows and cells
-                    $('#consumablesTable tbody tr:visible').each(function() {
-                        var row = [];
-                        $(this).find('td:visible').each(function() {
-                            row.push('"' + $(this).text().replace(/"/g, '""') + '"');
-                        });
-                        csv.push(row.join(','));
-                    });
-                    
-                    // Download the CSV file
-                    var csvString = csv.join('\n');
-                    var filename = 'consumable_materials_' + new Date().toISOString().slice(0, 10) + '.csv';
-                    
-                    // Create a blob with the CSV data
-                    var blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-                    
-                    // Create a download link
-                    if (navigator.msSaveBlob) { // IE 10+
-                        navigator.msSaveBlob(blob, filename);
-                    } else {
-                        var link = document.createElement('a');
-                        if (link.download !== undefined) { // Feature detection
-                            // Create a URL for the blob
-                            var url = URL.createObjectURL(blob);
-                            link.setAttribute('href', url);
-                            link.setAttribute('download', filename);
-                            link.style.display = 'none';
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            URL.revokeObjectURL(url);
-                        } else {
-                            // Fallback for older browsers
-                            window.open('data:text/csv;charset=utf-8,' + encodeURIComponent(csvString));
-                        }
-                    }
-                });
-                buttonsContainer.append(excelButton);
+                // Create right button group with all buttons in one container
+                var rightButtons = $('<div class="button-group right-buttons"></div>');
+                // Add Smart Entry button directly to the right buttons group
+                rightButtons.append($('<a href="natural_language_inventory.php" class="btn btn-success btn-mobile-icon"><i class="bi bi-magic"></i><span class="btn-text"> Smart Entry</span></a>'));
+                rightButtons.append($('<button class="btn btn-info btn-mobile-icon"><i class="bi bi-printer"></i><span class="btn-text"> Print</span></button>'));
+                rightButtons.append($('<button class="btn btn-success btn-mobile-icon"><i class="bi bi-file-excel"></i><span class="btn-text"> Excel</span></button>'));
                 
-                // Add the buttons container to the action row
-                buttonsContainer.appendTo(actionContainer);
-                
-                // Create a custom search input
-                var searchContainer = $('<div class="search-container"></div>');
-                var searchInput = $('<input type="search" class="form-control form-control-sm" placeholder="Search...">');
-                searchInput.on('keyup', function() {
-                    table.search(this.value).draw();
-                });
-                searchContainer.append(searchInput);
-                
-                // Position the search container closer to the buttons
-                searchContainer.css({
-                    'margin-left': '10px',
-                    'margin-right': 'auto'
-                });
-                
-                // Add the search container to the action row
-                searchContainer.appendTo(actionContainer);
+                // Combine all groups
+                actionContainer.append(leftButtons);
+                actionContainer.append(searchGroup);
+                actionContainer.append(rightButtons);
                 
                 // Insert the action container before the table
                 actionContainer.insertBefore('#consumablesTable');
                 
-                // Initialize DataTables
-                var table = $('#consumablesTable').DataTable({
-                    scrollY: '60vh',
-                    scrollCollapse: true,
-                    scrollX: true, // Enable horizontal scrolling if needed
-                    paging: false,
-                    ordering: true,
-                    info: true,
-                    responsive: true,
-                    autoWidth: false, // Disable auto width to allow manual column width control
-                    dom: 'rt<"d-flex justify-content-between"ip>', // Remove 'f' to hide the default search
-                    columnDefs: [
-                        // Hide Units (Whole), Units (Part), and Qty Parts Per Whole columns on load
-                        { visible: false, targets: [0, 6, 7, 8, 10, 11] }, // Column indices: 6=Units (Whole), 7=Units (Part), 8=Qty Parts Per Whole
-                        // Set width for the Actions column
-                        { width: "140px", targets: -1 }, // Last column (Actions)
-                        // Set widths for other columns to ensure proper alignment
-                        { width: "50px", targets: 0 }, // ID column
-                        { width: "100px", targets: 1 }, // Item Type
-                        { width: "200px", targets: 2 }, // Item Name
-                        { width: "150px", targets: 3 }, // Normal Location
-                        { width: "100px", targets: 4 }, // Whole Quantity
-                        { width: "100px", targets: 5 }, // Reorder Threshold
-                        { width: "100px", targets: 9 }, // Total Part Units
-                        { width: "200px", targets: 10 }, // Composition Description
-                        { width: "120px", targets: 11 } // Last Updated
-                    ],
-                    drawCallback: function() {
-                        // Add extra space after the header is drawn
-                        $('.dataTables_scrollHead').css('margin-bottom', '5px');
-                        $('.dataTables_scrollBody').css('padding-top', '0px');
-                        
-                        // Ensure the table takes full width
-                        $(this).css('width', '100%');
-                        
-                        // Fix for the first row being covered - remove extra spacing
-                        $('.dataTables_scrollBody tbody tr:first-child').css({
-                            'margin-top': '0px',
-                            'border-top': '0px solid transparent',
-                            'position': 'relative',
-                            'top': '0px'
-                        });
-                        
-                        // Ensure all rows have consistent height
-                        $('.dataTables_scrollBody tbody tr').css({
-                            'height': 'auto',
-                            'min-height': '45px',
-                            'position': 'relative',
-                            'top': '0px'
-                        });
-                        
-                        // Force alignment between header and body
-                        $('.dataTables_scrollHeadInner').css('width', '100%');
-                        $('.dataTables_scrollHeadInner table').css('width', '100%');
-                        
-                        // Apply highlighting to ensure reorder rows are properly styled
-                        applyHighlighting();
+                // Now that all elements are rendered, set the table height
+                function initializeTableHeight() {
+                    const windowHeight = window.innerHeight;
+                    const navbarHeight = 60;
+                    const actionRowHeight = $('.action-row').outerHeight();
+                    const footerHeight = (window.innerWidth < 768) ? 40 : 50; // Smaller footer on phones
+                    const padding = (window.innerWidth < 768) ? 10 : 20; // Less padding on phones
+                    
+                    // Calculate available height
+                    let availableHeight = windowHeight - navbarHeight - actionRowHeight - footerHeight - padding;
+                    
+                    // For phones in portrait mode (width < 768px), ensure minimum 5 rows visible
+                    if (window.innerWidth < 768) {
+                        const minRowsVisible = 5;
+                        const approxRowHeight = 45; // Approximate height of one row
+                        const minHeight = minRowsVisible * approxRowHeight;
+                        availableHeight = Math.max(availableHeight, minHeight);
+                    } else {
+                        // For larger screens, keep original minimum
+                        availableHeight = Math.max(availableHeight, 300);
                     }
-                });
-                
-                // Hide any default DataTables search boxes
-                $('.dataTables_filter').hide();
-                
-                // Apply row highlighting based on data attribute
-                function applyHighlighting() {
-                    $('#consumablesTable tbody tr').each(function() {
-                        var row = $(this);
-                        if (row.attr('data-needs-reorder') === 'true') {
-                            row.addClass('reorder-needed');
-                            // Apply styles directly to ensure they take effect
-                            row.css({
-                                'height': 'auto !important',
-                                'min-height': '45px !important'
-                            });
-                            row.find('td').css({
-                                'height': 'auto !important',
-                                'min-height': '45px !important',
-                                'line-height': '1.5 !important',
-                                'padding': '0.5rem !important',
-                                'background-color': '#fff3cd !important',
-                                'font-weight': 'bold !important'
-                            });
-                        } else {
-                            row.removeClass('reorder-needed');
-                            // Reset styles for non-reorder rows
-                            row.css({
-                                'height': 'auto !important',
-                                'min-height': '45px !important'
-                            });
-                            row.find('td').css({
-                                'height': 'auto !important',
-                                'min-height': '45px !important',
-                                'line-height': '1.5 !important',
-                                'padding': '0.5rem !important'
-                            });
-                        }
-                    });
+                    
+                    // Apply the height using the correct DataTables API
+                    $('.dataTables_scrollBody').css('height', availableHeight + 'px');
+                    
+                    // Wrap footer in fixed container if not already wrapped
+                    if (!$('.footer-wrapper').length) {
+                        $('.dataTables_info').wrap('<div class="footer-wrapper"></div>');
+                    }
+                    
+                    // Adjust table columns and redraw
+                    table.columns.adjust().draw();
                 }
+                
+                // Initialize height after a short delay to ensure all elements are rendered
+                setTimeout(initializeTableHeight, 100);
+                
+                // Add resize handler
+                $(window).on('resize', function() {
+                    initializeTableHeight();
+                });
                 
                 // Apply highlighting after initialization and on each draw
                 applyHighlighting();
@@ -858,6 +1121,7 @@ try {
     <div class="container content-container">
         <!-- Action row will be created via JavaScript -->
         
+        
         <?php if ($consumables): ?>
         <div class="table-responsive" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
             <table id="consumablesTable" class="table table-striped" style="width: 100%;">
@@ -923,8 +1187,12 @@ try {
                         <td><?= htmlspecialchars($formattedDate) ?></td>
                         <td>
                             <div class="action-buttons-cell">
-                                <a href="consumable_entry.php?id=<?= htmlspecialchars($item['id']) ?>" class="btn btn-sm btn-warning">Edit</a>
-                                <a href="inventory_entry.php?consumable_id=<?= htmlspecialchars($item['id']) ?>" class="btn btn-sm btn-info">Stock Chg</a>
+                                <a href="consumable_entry.php?id=<?= htmlspecialchars($item['id']) ?>" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-pencil"></i><span class="btn-text">Edit</span>
+                                </a>
+                                <a href="inventory_entry.php?consumable_id=<?= htmlspecialchars($item['id']) ?>" class="btn btn-sm btn-warning">
+                                    <i class="bi bi-box-arrow-in-down"></i><span class="btn-text">Stock Chg</span>
+                                </a>
                             </div>
                         </td>
                     </tr>
