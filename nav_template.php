@@ -2,24 +2,44 @@
 // This file contains the navigation bar template to be included in all pages
 // It assumes that auth_check.php has already been included and session is started
 ?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
+    <link rel="alternate icon" type="image/x-icon" href="assets/img/favicon.ico">
+    <link rel="mask-icon" href="assets/img/favicon.svg" color="#0d6efd">
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <title><?php echo isset($page_title) ? htmlspecialchars($page_title) . ' - ' : ''; ?>Inventory Management</title>
+</head>
+<body>
 <!-- Navigation Bar -->
 <div class="navigation-bar">
-    <a href="index.php" class="back-button">
-        <i class="bi bi-chevron-left"></i>
-    </a>
-    <h1 class="page-title"><?php echo $page_title ?? 'Inventory Management'; ?></h1>
-    <div class="d-flex align-items-center">
-        <span class="me-4"><?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
-        <a href="index.php" class="home-button me-4">
-            <i class="bi bi-house-fill"></i>
-        </a>
-        <a href="manual_index.html" class="help-button me-4" title="Help & Manuals">
-            <i class="bi bi-question-circle-fill"></i>
-        </a>
-        <a href="logout.php" class="logout-button">
-            <i class="bi bi-box-arrow-right"></i>
-        </a>
-    </div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.php">
+                <i class="bi bi-box me-2"></i>Inventory Management
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="consumable_list.php">Consumables</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="inventory.php">Inventory</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 </div>
 
 <style>
@@ -64,4 +84,8 @@
         font-size: 1.5rem;
         margin: 0;
     }
-</style> 
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
