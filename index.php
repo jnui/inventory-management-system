@@ -138,6 +138,16 @@ require_once 'auth_check.php';
                 </div>
             </a>
             
+            <a href="ordering.php" class="text-decoration-none">
+                <div class="menu-card">
+                    <div class="card-body">
+                        <i class="bi bi-cart-check card-icon"></i>
+                        <h2 class="card-title">Ordering</h2>
+                        <p class="card-text">Manage orders and track reorder status</p>
+                    </div>
+                </div>
+            </a>
+            
             <?php if (is_admin()): ?>
             <a href="user_list.php" class="text-decoration-none">
                 <div class="menu-card">

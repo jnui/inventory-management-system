@@ -72,6 +72,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':reorder_threshold'    => $_POST['reorder_threshold'] ?? 0,
                     ':id'                   => $_POST['id']
                 ]);
+                
+                // Redirect back to list with scroll_to parameter
+                header("Location: consumable_list.php?scroll_to=" . $_POST['id']);
+                exit;
             } else {
                 // Otherwise, perform an INSERT.
                 $stmt = $pdo->prepare("
@@ -91,9 +95,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':composition_description' => $_POST['composition_description'] ?? '',
                     ':reorder_threshold'    => $_POST['reorder_threshold'] ?? 0
                 ]);
+                
+                // Get the ID of the newly inserted item
+                $newItemId = $pdo->lastInsertId();
+                header("Location: consumable_list.php?scroll_to=" . $newItemId);
+                exit;
             }
-            header("Location: consumable_list.php");
-            exit;
         } catch (PDOException $e) {
             $error = "Error saving consumable material: " . $e->getMessage();
         }
@@ -149,50 +156,50 @@ try {
     <?php endif; ?>
     <form action="consumable_entry.php" method="POST">
         <?php if ($editMode): ?>
-            <input type="hidden" name="id" value="<?= htmlspecialchars($consumable['id']) ?>">
+            <input type="hidden" name="id" value="<?= htmlspecialchars($consumable['id'] ?? '') ?>">
         <?php endif; ?>
         <div class="mb-3">
             <label for="item_type" class="form-label">Item Type</label>
-            <input type="text" name="item_type" id="item_type" class="form-control" placeholder="Enter item type" required value="<?= htmlspecialchars($consumable['item_type']) ?>">
+            <input type="text" name="item_type" id="item_type" class="form-control" placeholder="Enter item type" required value="<?= htmlspecialchars($consumable['item_type'] ?? '') ?>">
         </div>
         <div class="mb-3">
             <label for="item_name" class="form-label">Item Name</label>
-            <input type="text" name="item_name" id="item_name" class="form-control" placeholder="Enter item name" required value="<?= htmlspecialchars($consumable['item_name']) ?>">
+            <input type="text" name="item_name" id="item_name" class="form-control" placeholder="Enter item name" required value="<?= htmlspecialchars($consumable['item_name'] ?? '') ?>">
         </div>
         <div class="mb-3">
             <label for="item_description" class="form-label">Item Description</label>
-            <textarea name="item_description" id="item_description" class="form-control" placeholder="Enter item description"><?= htmlspecialchars($consumable['item_description']) ?></textarea>
+            <textarea name="item_description" id="item_description" class="form-control" placeholder="Enter item description"><?= htmlspecialchars($consumable['item_description'] ?? '') ?></textarea>
         </div>
         <div class="mb-3">
             <label for="normal_item_location" class="form-label">Normal Item Location</label>
             <select name="normal_item_location" id="normal_item_location" class="form-select" required>
                 <option value="">Select Location</option>
                 <?php foreach ($locations as $loc): ?>
-                    <option value="<?= htmlspecialchars($loc['id']) ?>" <?= ($loc['id'] == $consumable['normal_item_location']) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($loc['location_name']) ?>
+                    <option value="<?= htmlspecialchars($loc['id'] ?? '') ?>" <?= ($loc['id'] == ($consumable['normal_item_location'] ?? null)) ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($loc['location_name'] ?? '') ?>
                     </option>
                 <?php endforeach; ?>
             </select>
         </div>
         <div class="mb-3">
             <label for="item_units_whole" class="form-label">Units (Whole)</label>
-            <input type="text" name="item_units_whole" id="item_units_whole" class="form-control" placeholder="e.g., each, stick, roll" value="<?= htmlspecialchars($consumable['item_units_whole']) ?>">
+            <input type="text" name="item_units_whole" id="item_units_whole" class="form-control" placeholder="e.g., each, stick, roll" value="<?= htmlspecialchars($consumable['item_units_whole'] ?? '') ?>">
         </div>
         <div class="mb-3">
             <label for="item_units_part" class="form-label">Units (Part)</label>
-            <input type="text" name="item_units_part" id="item_units_part" class="form-control" placeholder="e.g., feet, inches" value="<?= htmlspecialchars($consumable['item_units_part']) ?>">
+            <input type="text" name="item_units_part" id="item_units_part" class="form-control" placeholder="e.g., feet, inches" value="<?= htmlspecialchars($consumable['item_units_part'] ?? '') ?>">
         </div>
         <div class="mb-3">
             <label for="qty_parts_per_whole" class="form-label">Qty Parts Per Whole</label>
-            <input type="number" name="qty_parts_per_whole" id="qty_parts_per_whole" class="form-control" placeholder="Enter quantity of parts per whole" value="<?= htmlspecialchars($consumable['qty_parts_per_whole']) ?>">
+            <input type="number" name="qty_parts_per_whole" id="qty_parts_per_whole" class="form-control" placeholder="Enter quantity of parts per whole" value="<?= htmlspecialchars($consumable['qty_parts_per_whole'] ?? '') ?>">
         </div>
         <div class="mb-3">
             <label for="composition_description" class="form-label">Composition Description</label>
-            <textarea name="composition_description" id="composition_description" class="form-control" placeholder="Enter composition description"><?= htmlspecialchars($consumable['composition_description']) ?></textarea>
+            <textarea name="composition_description" id="composition_description" class="form-control" placeholder="Enter composition description"><?= htmlspecialchars($consumable['composition_description'] ?? '') ?></textarea>
         </div>
         <div class="mb-3">
             <label for="reorder_threshold" class="form-label">Reorder Threshold</label>
-            <input type="number" name="reorder_threshold" id="reorder_threshold" class="form-control" placeholder="Enter quantity at which to reorder" value="<?= htmlspecialchars($consumable['reorder_threshold']) ?>" min="0">
+            <input type="number" name="reorder_threshold" id="reorder_threshold" class="form-control" placeholder="Enter quantity at which to reorder" value="<?= htmlspecialchars($consumable['reorder_threshold'] ?? 0) ?>" min="0">
             <div class="form-text">When whole quantity falls below this number, the item will be highlighted in the list.</div>
         </div>
         <button type="submit" class="btn btn-success"><?= $editMode ? 'Update' : 'Add' ?> Consumable Material</button>

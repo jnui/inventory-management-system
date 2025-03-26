@@ -15,7 +15,11 @@ try {
                cm.whole_quantity, cm.reorder_threshold,
                (SELECT MAX(ice.change_date) 
                 FROM inventory_change_entries ice 
-                WHERE ice.consumable_material_id = cm.id) AS last_updated
+                WHERE ice.consumable_material_id = cm.id) AS last_updated,
+               (SELECT COUNT(*) 
+                FROM order_history oh 
+                WHERE oh.consumable_id = cm.id 
+                AND oh.status_id IN (2, 3)) as pending_orders
         FROM consumable_materials cm
         LEFT JOIN item_locations loc ON cm.normal_item_location = loc.id
         ORDER BY cm.item_name ASC
@@ -209,10 +213,22 @@ try {
             padding: 0.5rem !important;
         }
         
+        /* Highlight class for flashing effect - higher specificity to override reorder styles */
+        .highlight-row td,
+        .table-striped > tbody > tr.highlight-row td,
+        .table-striped > tbody > tr.reorder-needed.highlight-row td,
+        #consumablesTable tbody tr.highlight-row td {
+            background-color: #ffb6c1 !important; /* Pink background */
+            z-index: 2 !important;
+            position: relative !important;
+            transition: none !important;
+        }
+        
         /* Ensure highlighting works with DataTables striping */
         .table-striped > tbody > tr.reorder-needed:nth-of-type(odd) td,
         .table-striped > tbody > tr.reorder-needed:nth-of-type(even) td {
             background-color: #fff3cd !important;
+            transition: none !important;
         }
         
         /* Ensure all rows have consistent height */
@@ -430,20 +446,6 @@ try {
             border-left: 5px solid #fbbf24 !important; /* Yellow left border */
         }
         
-        /* Highlight class for flashing effect */
-        .highlight-row td {
-            background-color: #ffb6c1 !important; /* Pink background */
-        }
-        
-        /* Ensure proper highlighting with DataTables striping */
-        .reorder-row.odd {
-            background-color: #fffbeb !important;
-        }
-        
-        .reorder-row.even {
-            background-color: #fffbeb !important;
-        }
-        
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .action-row {
@@ -519,7 +521,7 @@ try {
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch !important;
             }
-
+            
             .container.content-container {
                 max-width: 100% !important;
                 padding-right: 5px !important;
@@ -824,40 +826,40 @@ try {
             }
 
             // Define applyHighlighting function first
-            function applyHighlighting() {
-                $('#consumablesTable tbody tr').each(function() {
-                    var row = $(this);
-                    if (row.attr('data-needs-reorder') === 'true') {
-                        row.addClass('reorder-needed');
-                        // Apply styles directly to ensure they take effect
-                        row.css({
-                            'height': 'auto !important',
-                            'min-height': '45px !important'
-                        });
-                        row.find('td').css({
-                            'height': 'auto !important',
-                            'min-height': '45px !important',
-                            'line-height': '1.5 !important',
-                            'padding': '0.5rem !important',
-                            'background-color': '#fff3cd !important',
-                            'font-weight': 'bold !important'
-                        });
-                    } else {
-                        row.removeClass('reorder-needed');
-                        // Reset styles for non-reorder rows
-                        row.css({
-                            'height': 'auto !important',
-                            'min-height': '45px !important'
-                        });
-                        row.find('td').css({
-                            'height': 'auto !important',
-                            'min-height': '45px !important',
-                            'line-height': '1.5 !important',
-                            'padding': '0.5rem !important'
-                        });
-                    }
-                });
-            }
+                function applyHighlighting() {
+                    $('#consumablesTable tbody tr').each(function() {
+                        var row = $(this);
+                        if (row.attr('data-needs-reorder') === 'true') {
+                            row.addClass('reorder-needed');
+                            // Apply styles directly to ensure they take effect
+                            row.css({
+                                'height': 'auto !important',
+                                'min-height': '45px !important'
+                            });
+                            row.find('td').css({
+                                'height': 'auto !important',
+                                'min-height': '45px !important',
+                                'line-height': '1.5 !important',
+                                'padding': '0.5rem !important',
+                                'background-color': '#fff3cd !important',
+                                'font-weight': 'bold !important'
+                            });
+                        } else {
+                            row.removeClass('reorder-needed');
+                            // Reset styles for non-reorder rows
+                            row.css({
+                                'height': 'auto !important',
+                                'min-height': '45px !important'
+                            });
+                            row.find('td').css({
+                                'height': 'auto !important',
+                                'min-height': '45px !important',
+                                'line-height': '1.5 !important',
+                                'padding': '0.5rem !important'
+                            });
+                        }
+                    });
+                }
 
             // Initialize DataTables
             var table = $('#consumablesTable').DataTable({
@@ -871,7 +873,7 @@ try {
                 dom: 'rt<"d-flex justify-content-between"ip>',
                 order: [[2, 'asc']], // Set default sort to column 2 (Item Name) in ascending order
                 columnDefs: [
-                    { visible: false, targets: [ 0, 1, 6, 7, 8, 10, 11] },
+                    { visible: false, targets: [1, 6, 7, 8, 10, 11] }, // Remove 0 from hidden columns
                     { width: "140px", targets: -1 },
                     { width: "50px", targets: 0 },
                     { width: "100px", targets: 1 },
@@ -903,31 +905,56 @@ try {
                             // Get container
                             const $container = $('.dataTables_scrollBody');
                             
-                            // Calculate position
-                            const offset = $targetRow.position().top;
-                            console.log("Row offset:", offset);
+                            // Calculate position - adjust offset to account for header
+                            const headerHeight = $('.dataTables_scrollHead').outerHeight();
+                            const rowPosition = $targetRow.position().top;
+                            const scrollPosition = rowPosition - headerHeight - 50; // 50px extra padding
+                            
+                            console.log("Scrolling to position:", scrollPosition);
                             
                             // Scroll to row first, then start flashing
                             $container.animate({
-                                scrollTop: offset - 100
+                                scrollTop: scrollPosition
                             }, 500, function() {
                                 // After scrolling completes, start the flashing sequence
                                 console.log("Starting flash sequence");
                                 let flashCount = 0;
-                                const maxFlashes = 6; // 3 complete cycles (pink-default-pink-default-pink-default)
+                                const maxFlashes = 6; // 3 complete cycles
                                 
                                 function flashRow() {
                                     if (flashCount < maxFlashes) {
                                         if (flashCount % 2 === 0) {
-                                            console.log("Flash ON:", flashCount);
                                             $targetRow.addClass('highlight-row');
+                                            // Force style refresh
+                                            $targetRow.find('td').css({
+                                                'background-color': '#ffb6c1 !important',
+                                                'transition': 'none !important'
+                                            });
                                         } else {
-                                            console.log("Flash OFF:", flashCount);
                                             $targetRow.removeClass('highlight-row');
+                                            // Restore original background if it's a reorder row
+                                            if ($targetRow.hasClass('reorder-needed')) {
+                                                $targetRow.find('td').css({
+                                                    'background-color': '#fff3cd !important',
+                                                    'transition': 'none !important'
+                                                });
+                                            } else {
+                                                $targetRow.find('td').css({
+                                                    'background-color': '',
+                                                    'transition': 'none !important'
+                                                });
+                                            }
                                         }
                                         flashCount++;
-                                        // Schedule next flash with 250ms interval for faster flashing
                                         setTimeout(flashRow, 250);
+                                    } else {
+                                        // After flashing, restore original state
+                                        if ($targetRow.hasClass('reorder-needed')) {
+                                            $targetRow.find('td').css({
+                                                'background-color': '#fff3cd !important',
+                                                'transition': 'none !important'
+                                            });
+                                        }
                                     }
                                 }
                                 
@@ -1003,12 +1030,17 @@ try {
                 var searchInput = $('<input type="search" class="form-control" placeholder="Search...">');
                 searchGroup.append(searchInput);
                 
+                // Bind search input to DataTables search
+                searchInput.on('keyup', function() {
+                    table.search(this.value).draw();
+                });
+                
                 // Create right button group with all buttons in one container
                 var rightButtons = $('<div class="button-group right-buttons"></div>');
                 // Add Smart Entry button directly to the right buttons group
                 rightButtons.append($('<a href="natural_language_inventory.php" class="btn btn-success btn-mobile-icon"><i class="bi bi-magic"></i><span class="btn-text"> Smart Entry</span></a>'));
-                rightButtons.append($('<button class="btn btn-info btn-mobile-icon"><i class="bi bi-printer"></i><span class="btn-text"> Print</span></button>'));
-                rightButtons.append($('<button class="btn btn-success btn-mobile-icon"><i class="bi bi-file-excel"></i><span class="btn-text"> Excel</span></button>'));
+                rightButtons.append($('<button class="btn btn-info btn-mobile-icon" id="printButton"><i class="bi bi-printer"></i><span class="btn-text"> Print</span></button>'));
+                rightButtons.append($('<button class="btn btn-success btn-mobile-icon" id="excelButton"><i class="bi bi-file-excel"></i><span class="btn-text"> Excel</span></button>'));
                 
                 // Combine all groups
                 actionContainer.append(leftButtons);
@@ -1106,6 +1138,92 @@ try {
                 
                 console.log("DataTable initialized successfully");
                 
+                // Add print functionality
+                $('#printButton').on('click', function() {
+                    // Create a new window for printing
+                    var printWindow = window.open('', '_blank');
+                    
+                    // Get the table HTML
+                    var tableHtml = $('#consumablesTable').clone();
+                    
+                    // Remove the action buttons column
+                    tableHtml.find('th:last-child, td:last-child').remove();
+                    
+                    // Create the print content
+                    var printContent = `
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Consumable Materials List - Print</title>
+                            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+                            <style>
+                                body { padding: 20px; }
+                                .table { width: 100%; }
+                                .table th { background-color: #f8f9fa; }
+                                .reorder-needed td { background-color: #fff3cd !important; }
+                                @media print {
+                                    .table th { background-color: #f8f9fa !important; -webkit-print-color-adjust: exact; }
+                                    .reorder-needed td { background-color: #fff3cd !important; -webkit-print-color-adjust: exact; }
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <h2 class="mb-4">Consumable Materials List</h2>
+                            ${tableHtml.prop('outerHTML')}
+                        </body>
+                        </html>
+                    `;
+                    
+                    // Write the content to the new window
+                    printWindow.document.write(printContent);
+                    printWindow.document.close();
+                    
+                    // Wait for the content to load before printing
+                    printWindow.onload = function() {
+                        printWindow.print();
+                        printWindow.close();
+                    };
+                });
+
+                // Add Excel export functionality
+                $('#excelButton').on('click', function() {
+                    // Get the table data
+                    var data = table.data().toArray();
+                    
+                    // Create CSV content
+                    var csvContent = "Item Name,Type,Location,Units,Quantity,Reorder Point,Last Updated\n";
+                    
+                    data.forEach(function(row) {
+                        var itemName = $(row[0]).text().trim();
+                        var type = row[1];
+                        var location = row[2];
+                        var units = row[3];
+                        var quantity = row[4];
+                        var reorderPoint = row[5];
+                        var lastUpdated = row[6];
+                        
+                        // Escape commas and quotes in the data
+                        itemName = itemName.replace(/"/g, '""');
+                        if (itemName.includes(',')) {
+                            itemName = '"' + itemName + '"';
+                        }
+                        
+                        csvContent += `${itemName},${type},${location},${units},${quantity},${reorderPoint},${lastUpdated}\n`;
+                    });
+                    
+                    // Create a blob and download it
+                    var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    var link = document.createElement('a');
+                    var url = URL.createObjectURL(blob);
+                    
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', 'consumable_materials.csv');
+                    link.style.visibility = 'hidden';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+                
             } catch (e) {
                 console.error("Error initializing DataTable:", e);
                 alert("Error initializing table features. Please check the console for details.");
@@ -1188,7 +1306,11 @@ try {
                         <td><?= htmlspecialchars($item['item_name']) ?></td>
                         <td><?= htmlspecialchars($item['normal_location']) ?></td>
                         <td><?= htmlspecialchars($wholeQuantityDisplay) ?></td>
-                        <td><?= htmlspecialchars($item['reorder_threshold']) ?></td>
+                        <td><?= htmlspecialchars($item['reorder_threshold']) ?>
+                            <?php if ($item['whole_quantity'] < $item['reorder_threshold'] && $item['pending_orders'] > 0): ?>
+                                <i class="bi bi-cart-check text-primary ms-1" title="<?php echo $item['pending_orders']; ?> pending order(s)"></i>
+                            <?php endif; ?>
+                        </td>
                         <td><?= htmlspecialchars($item['item_units_whole']) ?></td>
                         <td><?= htmlspecialchars($item['item_units_part']) ?></td>
                         <td><?= htmlspecialchars($item['qty_parts_per_whole']) ?></td>

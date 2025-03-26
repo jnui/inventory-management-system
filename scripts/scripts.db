@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS scripts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    script_name TEXT NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_run TIMESTAMP,
+    status TEXT
+);
+
+INSERT INTO scripts (script_name, description) VALUES 
+('git_sync.ps1', 'Git synchronization script with logging functionality'); 
