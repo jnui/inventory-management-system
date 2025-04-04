@@ -1,4 +1,15 @@
 <?php
+// Set session cookie parameters BEFORE starting the session
+// 3 days in seconds: 259200
+session_set_cookie_params([
+    'lifetime' => 259200,      // 3 days in seconds
+    'path' => '/',             // Cookie available for entire domain
+    'domain' => '',            // Current domain only
+    'secure' => false,         // Allow both HTTP and HTTPS (change to true if site is HTTPS only)
+    'httponly' => true,        // Cookie not accessible via JavaScript
+    'samesite' => 'Lax'        // Protect against CSRF
+]);
+
 // Start session
 session_start();
 
@@ -34,6 +45,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_name'] = $user['name'];
                 $_SESSION['user_initials'] = $user['initials'];
                 $_SESSION['user_role'] = $user['role'];
+                $_SESSION['last_activity'] = time(); // Add timestamp to track session activity
+                
+                // Force session to be saved and regenerate session ID for security
+                session_regenerate_id(true);
                 
                 // Redirect to index page
                 header("Location: index.php");
