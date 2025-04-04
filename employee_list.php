@@ -3,6 +3,9 @@
 // Include authentication check
 require_once 'auth_check.php';
 
+// Check if user has admin role
+require_admin();
+
 // Include the database connection file
 require_once 'db_connection.php';
 
@@ -38,14 +41,18 @@ include 'nav_template.php';
 ?>
 
 <div class="container content-container">
+    <?php if (is_admin()): ?>
     <a href="employee_entry.php" class="btn btn-primary mb-3">Add New Employee</a>
+    <?php endif; ?>
     <?php if ($employees): ?>
     <table class="table table-striped">
         <thead>
             <tr>
                 <th>ID</th>
                 <th>First Name</th>
+                <?php if (is_admin()): ?>
                 <th>Actions</th>
+                <?php endif; ?>
             </tr>
         </thead>
         <tbody>
@@ -53,15 +60,17 @@ include 'nav_template.php';
             <tr>
                 <td><?= htmlspecialchars($employee['id']) ?></td>
                 <td><?= htmlspecialchars($employee['first_name']) ?></td>
+                <?php if (is_admin()): ?>
                 <td>
                     <a href="employee_entry.php?id=<?= htmlspecialchars($employee['id']) ?>" class="btn btn-sm btn-warning">Edit</a>
                 </td>
+                <?php endif; ?>
             </tr>
             <?php endforeach; ?>
         </tbody>
     </table>
     <?php else: ?>
-        <p>No employees found. <a href="employee_entry.php">Add one now</a>.</p>
+        <p>No employees found. <?php if (is_admin()): ?><a href="employee_entry.php">Add one now</a>.<?php endif; ?></p>
     <?php endif; ?>
 </div>
 <!-- Bootstrap JS Bundle -->

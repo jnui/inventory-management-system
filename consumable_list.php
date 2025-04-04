@@ -8,23 +8,27 @@ require_once 'db_connection.php';
 try {
     // Retrieve consumable materials along with their assigned normal location and most recent change date
     $stmt = $pdo->query("
-        SELECT cm.id, cm.item_type, cm.item_name,
+        SELECT cm.id, cm.item_type, cm.item_name, cm.item_description,
                loc.location_name AS normal_location,
                cm.item_units_whole, cm.item_units_part,
                cm.qty_parts_per_whole, cm.composition_description,
-               cm.whole_quantity, cm.reorder_threshold,
+               cm.whole_quantity, cm.reorder_threshold, cm.optimum_quantity,
                (SELECT MAX(ice.change_date) 
                 FROM inventory_change_entries ice 
                 WHERE ice.consumable_material_id = cm.id) AS last_updated,
                (SELECT COUNT(*) 
                 FROM order_history oh 
                 WHERE oh.consumable_id = cm.id 
-                AND oh.status_id IN (2, 3)) as pending_orders
+                AND oh.status_id IN (2, 3)) as pending_orders,
+               cm.image_thumb_50, cm.image_full
         FROM consumable_materials cm
         LEFT JOIN item_locations loc ON cm.normal_item_location = loc.id
         ORDER BY cm.item_name ASC
     ");
     $consumables = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // Debug: Log the data structure
+    error_log("Consumables data: " . print_r($consumables, true));
 } catch (PDOException $e) {
     die("Database error: " . $e->getMessage());
 }
@@ -56,6 +60,9 @@ try {
     
     <!-- JSZip for Excel export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- Bootstrap JS Bundle - Move to head -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Custom CSS for iPad optimization -->
     <link href="custom.css" rel="stylesheet">
@@ -811,219 +818,323 @@ try {
     </style>
     <script>
         $(document).ready(function() {
-            // Function to calculate available height for the table
-            function calculateTableHeight() {
-                const windowHeight = window.innerHeight;
-                const navbarHeight = 60; // Height of the navigation bar
-                const actionRowHeight = $('.action-row').outerHeight() || 0;
-                const padding = 20; // Some padding at the bottom
-                
-                // Calculate available height
-                const availableHeight = windowHeight - navbarHeight - actionRowHeight - padding;
-                
-                // Ensure minimum height of 300px
-                return Math.max(availableHeight, 300);
-            }
+            var table;
+            
+            try {
+                // Function to calculate available height for the table
+                function calculateTableHeight() {
+                    const windowHeight = window.innerHeight;
+                    const navbarHeight = 60; // Height of the navigation bar
+                    const actionRowHeight = $('.action-row').outerHeight() || 0;
+                    const padding = 20; // Some padding at the bottom
+                    
+                    // Calculate available height
+                    const availableHeight = windowHeight - navbarHeight - actionRowHeight - padding;
+                    
+                    // Ensure minimum height of 300px
+                    return Math.max(availableHeight, 300);
+                }
 
-            // Define applyHighlighting function first
+                // Define applyHighlighting function first
                 function applyHighlighting() {
                     $('#consumablesTable tbody tr').each(function() {
                         var row = $(this);
                         if (row.attr('data-needs-reorder') === 'true') {
                             row.addClass('reorder-needed');
-                            // Apply styles directly to ensure they take effect
                             row.css({
-                                'height': 'auto !important',
-                                'min-height': '45px !important'
+                                'height': 'auto',
+                                'min-height': '45px'
                             });
                             row.find('td').css({
-                                'height': 'auto !important',
-                                'min-height': '45px !important',
-                                'line-height': '1.5 !important',
-                                'padding': '0.5rem !important',
-                                'background-color': '#fff3cd !important',
-                                'font-weight': 'bold !important'
+                                'height': 'auto',
+                                'min-height': '45px',
+                                'line-height': '1.5',
+                                'padding': '0.5rem',
+                                'background-color': '#fff3cd',
+                                'font-weight': 'bold'
                             });
                         } else {
                             row.removeClass('reorder-needed');
-                            // Reset styles for non-reorder rows
                             row.css({
-                                'height': 'auto !important',
-                                'min-height': '45px !important'
+                                'height': 'auto',
+                                'min-height': '45px'
                             });
                             row.find('td').css({
-                                'height': 'auto !important',
-                                'min-height': '45px !important',
-                                'line-height': '1.5 !important',
-                                'padding': '0.5rem !important'
+                                'height': 'auto',
+                                'min-height': '45px',
+                                'line-height': '1.5',
+                                'padding': '0.5rem'
                             });
                         }
                     });
                 }
 
-            // Initialize DataTables
-            var table = $('#consumablesTable').DataTable({
-                scrollCollapse: true,
-                scrollX: true,
-                paging: false,
-                ordering: true,
-                info: true,
-                responsive: true,
-                autoWidth: false,
-                dom: 'rt<"d-flex justify-content-between"ip>',
-                order: [[2, 'asc']], // Set default sort to column 2 (Item Name) in ascending order
-                columnDefs: [
-                    { visible: false, targets: [1, 6, 7, 8, 10, 11] }, // Remove 0 from hidden columns
-                    { width: "140px", targets: -1 },
-                    { width: "50px", targets: 0 },
-                    { width: "100px", targets: 1 },
-                    { width: "200px", targets: 2 },
-                    { width: "150px", targets: 3 },
-                    { width: "100px", targets: 4 },
-                    { width: "100px", targets: 5 },
-                    { width: "100px", targets: 9 },
-                    { width: "200px", targets: 10 },
-                    { width: "120px", targets: 11 }
-                ],
-                drawCallback: function() {
-                    // Check for scroll_to parameter in URL
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const scrollToId = urlParams.get('scroll_to');
-                    
-                    if (scrollToId) {
-                        console.log("Found scroll_to parameter:", scrollToId);
+                // Initialize DataTables
+                table = $('#consumablesTable').DataTable({
+                    scrollY: '100%',
+                    scrollX: true,
+                    scrollCollapse: true,
+                    paging: false,
+                    order: [[3, 'asc']], // Sort by name column by default
+                    processing: true,
+                    data: <?php echo json_encode($consumables); ?>,
+                    columns: [
+                        { 
+                            data: null,
+                            orderable: false,
+                            render: function(data, type, row) {
+                                if (!row.image_thumb_50) {
+                                    return '<div class="text-muted">No image</div>';
+                                }
+                                return `<img src="${row.image_thumb_50}" 
+                                          alt="Item thumbnail" 
+                                          class="img-thumbnail cursor-pointer" 
+                                          style="max-width: 50px; cursor: pointer;"
+                                          data-full-image="${row.image_full}"
+                                          onclick="showFullImage(this)">`;
+                            }
+                        }, // Image column
+                        { data: 'id', visible: false }, // ID (hidden by default)
+                        { data: 'item_type', visible: false }, // Type (hidden by default)
+                        { data: 'item_name' }, // Name
+                        { data: 'item_description' }, // Description
+                        { data: 'normal_location' }, // Location
+                        { data: 'whole_quantity', orderable: true }, // Whole Qty with units
+                        { data: 'reorder_threshold', orderable: true }, // Reorder Threshold
+                        { data: null, orderable: false } // Actions column
+                    ],
+                    createdRow: function(row, data, dataIndex) {
+                        $(row).attr('id', 'consumable-' + data.id);
+                    },
+                    columnDefs: [
+                        { width: "30px", targets: 0, className: 'text-center', title: '' }, // Image column with no header text
+                        { width: "30px", targets: 1, className: 'dt-body-left' }, // ID
+                        { width: "50px", targets: 2, className: 'dt-body-left' }, // Type
+                        { width: "230px", targets: 3, className: 'dt-body-left' }, // Name
+                        { width: "250px", targets: 4, className: 'dt-body-left' }, // Description
+                        { width: "100px", targets: 5, className: 'dt-body-center' }, // Location
+                        { width: "100px", targets: 6, className: 'dt-body-center' }, // Whole Qty
+                        { width: "80px", targets: 7, className: 'dt-body-center', title: 'Re-up' }, // Reorder Threshold
+                        { width: "200px", targets: 8, className: 'text-center' }, // Actions column
+                        {
+                            targets: 6, // Whole Qty column
+                            render: function(data, type, row) {
+                                if (data === null || data === undefined) {
+                                    return '0';
+                                }
+                                return `${data} ${row.item_units_whole || ''}`;
+                            }
+                        },
+                        {
+                            targets: 7, // Reorder Threshold column
+                            render: function(data, type, row) {
+                                let html = data;
+                                if (row.whole_quantity < row.reorder_threshold && row.pending_orders > 0) {
+                                    html += `<i class="bi bi-cart-check text-primary ms-1" title="${row.pending_orders} pending order(s)"></i>`;
+                                }
+                                return html;
+                            }
+                        },
+                        {
+                            targets: 8, // Actions column
+                            render: function(data, type, row) {
+                                return `<div class="action-buttons-cell">
+                                    <a href="consumable_entry.php?id=${row.id}" class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil"></i><span class="btn-text">Edit</span>
+                                    </a>
+                                    <a href="inventory_entry.php?consumable_id=${row.id}" class="btn btn-sm btn-warning">
+                                        <i class="bi bi-box-arrow-in-down"></i><span class="btn-text">Stock Chg</span>
+                                    </a>
+                                </div>`;
+                            }
+                        }
+                    ],
+                    info: true,
+                    responsive: true,
+                    autoWidth: false,
+                    dom: 'rt<"d-flex justify-content-between"ip>',
+                    scrollY: calculateTableHeight(),
+                    initComplete: function() {
+                        // Debug: Log the data structure
+                        console.log('Data structure:', this.api().data().toArray());
                         
-                        // Find the row by ID using jQuery
-                        const $rows = $('#consumablesTable tbody tr');
-                        const $targetRow = $rows.filter(function() {
-                            return $(this).find('td:first').text().trim() === scrollToId;
+                        // Debug: Log image paths
+                        this.api().rows().every(function(rowIdx, data) {
+                            console.log('Row ' + rowIdx + ' image data:', {
+                                thumb_50: data.image_thumb_50,
+                                full: data.image_full
+                            });
                         });
                         
-                        if ($targetRow.length) {
-                            console.log("Found matching row");
+                        // Force column width recalculation
+                        this.api().columns.adjust();
+                        
+                        // Ensure header and body widths match
+                        var headerTable = $(this).closest('.dataTables_wrapper').find('.dataTables_scrollHead table');
+                        var bodyTable = $(this).closest('.dataTables_wrapper').find('.dataTables_scrollBody table');
+                        
+                        // Set table layout to fixed
+                        headerTable.css('table-layout', 'fixed');
+                        bodyTable.css('table-layout', 'fixed');
+                        
+                        // Match column widths
+                        headerTable.find('th').each(function(index) {
+                            var width = $(this).outerWidth();
+                            bodyTable.find('td:nth-child(' + (index + 1) + ')').width(width);
+                        });
+
+                        // Set initial active state for visible columns
+                        this.api().columns().every(function(index) {
+                            if (this.visible()) {
+                                $('.dropdown-item[data-column="' + index + '"]').addClass('active');
+                            } else {
+                                $('.dropdown-item[data-column="' + index + '"]').removeClass('active');
+                            }
+                        });
+                    },
+                    drawCallback: function() {
+                        // Check for scroll_to parameter in URL
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const scrollToId = urlParams.get('scroll_to');
+                        
+                        console.log('Scroll debug - URL parameter:', scrollToId);
+                        
+                        if (scrollToId) {
+                            // Use the row ID directly instead of searching through columns
+                            const $targetRow = $(`#consumable-${scrollToId}`);
                             
-                            // Get container
-                            const $container = $('.dataTables_scrollBody');
+                            console.log('Scroll debug - Target row found:', $targetRow.length > 0);
+                            console.log('Scroll debug - Target row ID:', `#consumable-${scrollToId}`);
                             
-                            // Calculate position - adjust offset to account for header
-                            const headerHeight = $('.dataTables_scrollHead').outerHeight();
-                            const rowPosition = $targetRow.position().top;
-                            const scrollPosition = rowPosition - headerHeight - 50; // 50px extra padding
-                            
-                            console.log("Scrolling to position:", scrollPosition);
-                            
-                            // Scroll to row first, then start flashing
-                            $container.animate({
-                                scrollTop: scrollPosition
-                            }, 500, function() {
-                                // After scrolling completes, start the flashing sequence
-                                console.log("Starting flash sequence");
-                                let flashCount = 0;
-                                const maxFlashes = 6; // 3 complete cycles
+                            if ($targetRow.length) {
+                                const $container = $('.dataTables_scrollBody');
+                                const headerHeight = $('.dataTables_scrollHead').outerHeight();
+                                const rowPosition = $targetRow.position().top;
+                                const scrollPosition = rowPosition - headerHeight - 50;
                                 
-                                function flashRow() {
-                                    if (flashCount < maxFlashes) {
-                                        if (flashCount % 2 === 0) {
-                                            $targetRow.addClass('highlight-row');
-                                            // Force style refresh
-                                            $targetRow.find('td').css({
-                                                'background-color': '#ffb6c1 !important',
-                                                'transition': 'none !important'
-                                            });
-                                        } else {
-                                            $targetRow.removeClass('highlight-row');
-                                            // Restore original background if it's a reorder row
-                                            if ($targetRow.hasClass('reorder-needed')) {
+                                console.log('Scroll debug - Container height:', $container.height());
+                                console.log('Scroll debug - Header height:', headerHeight);
+                                console.log('Scroll debug - Row position:', rowPosition);
+                                console.log('Scroll debug - Scroll position:', scrollPosition);
+                                
+                                $container.animate({
+                                    scrollTop: scrollPosition
+                                }, 500, function() {
+                                    console.log('Scroll debug - Animation completed');
+                                    let flashCount = 0;
+                                    const maxFlashes = 6;
+                                    
+                                    function flashRow() {
+                                        if (flashCount < maxFlashes) {
+                                            if (flashCount % 2 === 0) {
+                                                $targetRow.addClass('highlight-row');
                                                 $targetRow.find('td').css({
-                                                    'background-color': '#fff3cd !important',
-                                                    'transition': 'none !important'
+                                                    'background-color': '#ffb6c1',
+                                                    'transition': 'none'
                                                 });
                                             } else {
+                                                $targetRow.removeClass('highlight-row');
+                                                if ($targetRow.hasClass('reorder-needed')) {
+                                                    $targetRow.find('td').css({
+                                                        'background-color': '#fff3cd',
+                                                        'transition': 'none'
+                                                    });
+                                                } else {
+                                                    $targetRow.find('td').css({
+                                                        'background-color': '',
+                                                        'transition': 'none'
+                                                    });
+                                                }
+                                            }
+                                            flashCount++;
+                                            setTimeout(flashRow, 250);
+                                        } else {
+                                            if ($targetRow.hasClass('reorder-needed')) {
                                                 $targetRow.find('td').css({
-                                                    'background-color': '',
-                                                    'transition': 'none !important'
+                                                    'background-color': '#fff3cd',
+                                                    'transition': 'none'
                                                 });
                                             }
                                         }
-                                        flashCount++;
-                                        setTimeout(flashRow, 250);
-                                    } else {
-                                        // After flashing, restore original state
-                                        if ($targetRow.hasClass('reorder-needed')) {
-                                            $targetRow.find('td').css({
-                                                'background-color': '#fff3cd !important',
-                                                'transition': 'none !important'
-                                            });
-                                        }
                                     }
-                                }
-                                
-                                // Start the flashing sequence
-                                flashRow();
+                                    flashRow();
+                                });
+                            }
+                        }
+                        
+                        $('.dataTables_scrollHead').css('margin-bottom', '5px');
+                        $('.dataTables_scrollBody').css('padding-top', '0px');
+                        $(this).css('width', '100%');
+                        
+                        applyHighlighting();
+                        
+                        // Force column width recalculation after each draw
+                        this.api().columns.adjust();
+                        
+                        // Ensure header and body alignment
+                        var headerTable = $(this).closest('.dataTables_wrapper').find('.dataTables_scrollHead table');
+                        var bodyTable = $(this).closest('.dataTables_wrapper').find('.dataTables_scrollBody table');
+                        
+                        headerTable.css('table-layout', 'fixed');
+                        bodyTable.css('table-layout', 'fixed');
+                        
+                        // Match widths after any table redraw
+                        headerTable.find('th').each(function(index) {
+                            var width = $(this).outerWidth();
+                            bodyTable.find('td:nth-child(' + (index + 1) + ')').width(width);
+                        });
+                        
+                        // Add scroll to top button to the existing DataTables info element
+                        if (!$('#scrollToTopBtn').length) {
+                            $('.dataTables_info').append('<span id="scrollToTopBtn" class="ms-3" style="cursor: pointer;"><i class="bi bi-arrow-up-circle-fill" style="font-size: 1.5rem;"></i></span>');
+                            
+                            // Add click event to scroll to top
+                            $('#scrollToTopBtn').on('click', function() {
+                                $('.dataTables_scrollBody').animate({
+                                    scrollTop: 0
+                                }, 500);
                             });
-                        } else {
-                            console.error("Could not find row with ID:", scrollToId);
                         }
                     }
-                    
-                    // Rest of your existing drawCallback code
-                    $('.dataTables_scrollHead').css('margin-bottom', '5px');
-                    $('.dataTables_scrollBody').css('padding-top', '0px');
-                    $(this).css('width', '100%');
-                    
-                    // Apply highlighting
-                    applyHighlighting();
-                }
-            });
-            
-            try {
-                // Create a container for our action buttons
+                });
+
+                // Create action buttons after table is initialized
                 var actionContainer = $('<div class="action-row"></div>');
-                
-                // Create left button group
                 var leftButtons = $('<div class="button-group left-buttons"></div>');
                 leftButtons.append($('<a href="consumable_entry.php" class="btn btn-primary btn-mobile-icon"><i class="bi bi-plus-lg"></i><span class="btn-text"> Add New Material</span></a>'));
                 
-                // Create column visibility dropdown with proper Bootstrap structure
+                // Create column visibility dropdown
                 var columnToggleHtml = `
                     <div class="dropdown d-inline-block">
                         <button class="btn btn-secondary dropdown-toggle btn-mobile-icon" type="button" id="columnToggleButton" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-layout-three-columns"></i><span class="btn-text"> Show/Hide Cols</span>
                         </button>
-                        <ul class="dropdown-menu p-2" aria-labelledby="columnToggleButton" style="min-width: 200px;">
-                            <li><a class="dropdown-item" data-column="0">ID</a></li>
-                            <li><a class="dropdown-item" data-column="1">Item Type</a></li>
-                            <li><a class="dropdown-item" data-column="2">Item Name</a></li>
-                            <li><a class="dropdown-item" data-column="3">Normal Location</a></li>
-                            <li><a class="dropdown-item" data-column="4">Whole Quantity</a></li>
-                            <li><a class="dropdown-item" data-column="5">Reorder Threshold</a></li>
-                            <li><a class="dropdown-item" data-column="6">Units (Whole)</a></li>
-                            <li><a class="dropdown-item" data-column="7">Units (Part)</a></li>
-                            <li><a class="dropdown-item" data-column="8">Qty Parts Per Whole</a></li>
-                            <li><a class="dropdown-item" data-column="9">Total Part Units</a></li>
-                            <li><a class="dropdown-item" data-column="10">Composition Description</a></li>
-                            <li><a class="dropdown-item" data-column="11">Last Updated</a></li>
-                        </ul>
+                        <div class="dropdown-menu p-2" aria-labelledby="columnToggleButton" style="min-width: 200px;">
+                            <div><a class="dropdown-item active" data-column="0" href="#">Image</a></div>
+                            <div><a class="dropdown-item active" data-column="1" href="#">ID</a></div>
+                            <div><a class="dropdown-item" data-column="2" href="#">Type</a></div>
+                            <div><a class="dropdown-item active" data-column="3" href="#">Name</a></div>
+                            <div><a class="dropdown-item active" data-column="4" href="#">Description</a></div>
+                            <div><a class="dropdown-item active" data-column="5" href="#">Location</a></div>
+                            <div><a class="dropdown-item active" data-column="6" href="#">Qty</a></div>
+                            <div><a class="dropdown-item active" data-column="7" href="#">Reorder Threshold</a></div>
+                            <div><a class="dropdown-item active" data-column="8" href="#">Actions</a></div>
+                        </div>
                     </div>
                 `;
                 leftButtons.append($(columnToggleHtml));
-                
-                // Initialize column visibility toggle
-                $(document).on('click', '.dropdown-item', function(e) {
-                    e.preventDefault();
-                    var column = table.column($(this).data('column'));
-                    column.visible(!column.visible());
-                    $(this).toggleClass('active');
-                });
 
-                // Set initial active state for visible columns
-                setTimeout(function() {
-                    table.columns().every(function(index) {
-                        if (this.visible()) {
-                            $('.dropdown-item[data-column="' + index + '"]').addClass('active');
-                        }
-                    });
-                }, 100);
+                // Handle column visibility toggle
+                $(document).on('click', '.dropdown-menu .dropdown-item', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    var columnIndex = parseInt($(this).data('column'));
+                    var column = table.column(columnIndex);
+                    var isVisible = column.visible();
+                    column.visible(!isVisible);
+                    $(this).toggleClass('active');
+                    table.columns.adjust().draw(false);
+                });
                 
                 // Create search group
                 var searchGroup = $('<div class="search-container"></div>');
@@ -1249,86 +1360,49 @@ try {
             <table id="consumablesTable" class="table table-striped" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th style="width: 50px;">ID</th>
-                        <th style="width: 100px;">Item Type</th>
-                        <th style="width: 200px;">Item Name</th>
-                        <th style="width: 150px;">Normal Location</th>
-                        <th style="width: 100px;">Whole Quantity</th>
-                        <th style="width: 100px;">Reorder Threshold</th>
-                        <th style="width: 100px;">Units (Whole)</th>
-                        <th style="width: 100px;">Units (Part)</th>
-                        <th style="width: 100px;">Qty Parts Per Whole</th>
-                        <th style="width: 100px;">Total Part Units</th>
-                        <th style="width: 200px;">Composition Description</th>
-                        <th style="width: 120px;">Last Updated</th>
-                        <th style="width: 140px; min-width: 140px;">Actions</th>
+                        <th></th>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Location</th>
+                        <th>Qty</th>
+                        <th>Reorder Threshold</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($consumables as $item): 
-                        // Calculate the total part units
-                        $totalPartUnits = 0;
-                        if (!empty($item['whole_quantity']) && !empty($item['qty_parts_per_whole'])) {
-                            $totalPartUnits = (int)$item['whole_quantity'] * (int)$item['qty_parts_per_whole'];
-                        }
-                        
-                        // Format the date if it exists
-                        $formattedDate = 'N/A';
-                        if (!empty($item['last_updated'])) {
-                            $date = new DateTime($item['last_updated']);
-                            $formattedDate = $date->format('M j g:ia');
-                        }
-                        
-                        // Format whole quantity with units
-                        $wholeQuantityDisplay = 'N/A';
-                        if (isset($item['whole_quantity'])) {
-                            if (strtolower(trim($item['item_units_whole'])) === 'each') {
-                                // If units is "each", use item type (make first letter lowercase for readability)
-                                $type = lcfirst($item['item_type']);
-                                $wholeQuantityDisplay = $item['whole_quantity'] . ' ' . ($item['whole_quantity'] == 1 ? $type : $type . 's');
-                            } else {
-                                // Otherwise use the units_whole
-                                $units = $item['item_units_whole'];
-                                $wholeQuantityDisplay = $item['whole_quantity'] . ' ' . ($item['whole_quantity'] == 1 ? $units : $units . 's');
-                            }
-                        }
-                        
-                        // Check if reordering is needed
-                        $needsReorder = false;
-                        if (isset($item['reorder_threshold']) && $item['reorder_threshold'] > 0 && 
-                            isset($item['whole_quantity']) && $item['whole_quantity'] < $item['reorder_threshold']) {
-                            $needsReorder = true;
-                        }
-                    ?>
-                    <tr class="<?= $needsReorder ? 'reorder-needed' : '' ?>" data-needs-reorder="<?= $needsReorder ? 'true' : 'false' ?>">
-                        <td><?= htmlspecialchars($item['id']) ?></td>
-                        <td><?= htmlspecialchars($item['item_type']) ?></td>
-                        <td><?= htmlspecialchars($item['item_name']) ?></td>
-                        <td><?= htmlspecialchars($item['normal_location']) ?></td>
-                        <td><?= htmlspecialchars($wholeQuantityDisplay) ?></td>
-                        <td><?= htmlspecialchars($item['reorder_threshold']) ?>
-                            <?php if ($item['whole_quantity'] < $item['reorder_threshold'] && $item['pending_orders'] > 0): ?>
-                                <i class="bi bi-cart-check text-primary ms-1" title="<?php echo $item['pending_orders']; ?> pending order(s)"></i>
-                            <?php endif; ?>
-                        </td>
-                        <td><?= htmlspecialchars($item['item_units_whole']) ?></td>
-                        <td><?= htmlspecialchars($item['item_units_part']) ?></td>
-                        <td><?= htmlspecialchars($item['qty_parts_per_whole']) ?></td>
+                    <?php foreach ($consumables as $consumable): ?>
+                    <tr id="consumable-<?= htmlspecialchars($consumable['id']) ?>">
                         <td>
-                            <?php if ($totalPartUnits > 0): ?>
-                                <?= htmlspecialchars($totalPartUnits) ?> <?= htmlspecialchars($item['item_units_part']) ?>
+                            <?php if (!empty($consumable['image_thumb_50'])): ?>
+                                <img src="<?= htmlspecialchars($consumable['image_thumb_50']) ?>" 
+                                     alt="Item thumbnail" 
+                                     class="img-thumbnail cursor-pointer" 
+                                     style="max-width: 50px; cursor: pointer;"
+                                     data-full-image="<?= htmlspecialchars($consumable['image_full']) ?>"
+                                     onclick="showFullImage(this)">
                             <?php else: ?>
-                                N/A
+                                <div class="text-muted">No image</div>
                             <?php endif; ?>
                         </td>
-                        <td><?= htmlspecialchars($item['composition_description']) ?></td>
-                        <td><?= htmlspecialchars($formattedDate) ?></td>
+                        <td><?= htmlspecialchars($consumable['id']) ?></td>
+                        <td><?= htmlspecialchars($consumable['item_type']) ?></td>
+                        <td><?= htmlspecialchars($consumable['item_name']) ?></td>
+                        <td><?= htmlspecialchars($consumable['item_description']) ?></td>
+                        <td><?= htmlspecialchars($consumable['normal_location']) ?></td>
+                        <td><?= htmlspecialchars($consumable['whole_quantity']) ?> <?= htmlspecialchars($consumable['item_units_whole']) ?></td>
+                        <td><?= htmlspecialchars($consumable['reorder_threshold']) ?>
+                            <?php if ($consumable['whole_quantity'] < $consumable['reorder_threshold'] && $consumable['pending_orders'] > 0): ?>
+                                <i class="bi bi-cart-check text-primary ms-1" title="<?php echo $consumable['pending_orders']; ?> pending order(s)"></i>
+                            <?php endif; ?>
+                        </td>
                         <td>
                             <div class="action-buttons-cell">
-                                <a href="consumable_entry.php?id=<?= htmlspecialchars($item['id']) ?>" class="btn btn-sm btn-warning">
+                                <a href="consumable_entry.php?id=<?= htmlspecialchars($consumable['id']) ?>" class="btn btn-sm btn-warning">
                                     <i class="bi bi-pencil"></i><span class="btn-text">Edit</span>
                                 </a>
-                                <a href="inventory_entry.php?consumable_id=<?= htmlspecialchars($item['id']) ?>" class="btn btn-sm btn-warning">
+                                <a href="inventory_entry.php?consumable_id=<?= htmlspecialchars($consumable['id']) ?>" class="btn btn-sm btn-warning">
                                     <i class="bi bi-box-arrow-in-down"></i><span class="btn-text">Stock Chg</span>
                                 </a>
                             </div>
@@ -1344,5 +1418,32 @@ try {
     </div>
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Image Modal -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-fullscreen">
+            <div class="modal-content">
+                <div class="modal-body p-0">
+                    <img src="" id="modalImage" class="img-fluid" style="width: 100%; height: 100%; object-fit: contain; cursor: pointer;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function showFullImage(imgElement) {
+        const fullImageUrl = imgElement.dataset.fullImage;
+        const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+        const modalImage = document.getElementById('modalImage');
+        
+        modalImage.src = fullImageUrl;
+        modal.show();
+    }
+
+    // Close modal when clicking anywhere on the image
+    document.getElementById('modalImage').addEventListener('click', function() {
+        bootstrap.Modal.getInstance(document.getElementById('imageModal')).hide();
+    });
+    </script>
 </body>
 </html>

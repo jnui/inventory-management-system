@@ -3,6 +3,9 @@
 // Include authentication check
 require_once 'auth_check.php';
 
+// Check if user has write access (not read-only)
+require_write_access();
+
 // Check if this is a natural language submission
 if (isset($_GET['nl']) && isset($_SESSION['nl_form_data'])) {
     $_POST = array_merge($_POST, $_SESSION['nl_form_data']);
@@ -66,28 +69,89 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $wholeQuantity = 0;
             }
         }
-        
-        // Insert the inventory change entry
-        $stmt = $pdo->prepare("
-            INSERT INTO inventory_change_entries 
-                    (consumable_material_id, item_short_code, item_name, item_description, item_notes, normal_item_location, reorder_threshold, items_added, items_removed, whole_quantity, employee_id, change_date)
-            VALUES 
-                    (:consumable_material_id, :item_short_code, :item_name, :item_description, :item_notes, :normal_item_location, :reorder_threshold, :items_added, :items_removed, :whole_quantity, :employee_id, NOW())
-        ");
-        
-        $stmt->execute([
-            ':consumable_material_id' => $_POST['consumable_material_id'],
-            ':item_short_code'        => $_POST['item_short_code'],
-            ':item_name'              => $consumable['item_name'],
-            ':item_description'       => $consumable['item_description'],
-            ':item_notes'             => $_POST['item_notes'],
-            ':normal_item_location'   => $consumable['normal_item_location'],
-            ':reorder_threshold'      => $_POST['reorder_threshold'],
-            ':items_added'            => $itemsAdded,
-            ':items_removed'          => $itemsRemoved,
-            ':whole_quantity'         => $wholeQuantity,
-            ':employee_id'            => $_POST['employee_id']
-        ]);
+
+        // If we're editing an existing entry, we need to reverse its effects first
+        if (isset($_GET['entry_id']) || isset($_POST['entry_id'])) {
+            $entry_id = $_GET['entry_id'] ?? $_POST['entry_id'];
+            error_log("Editing entry ID: " . $entry_id); // Add debug logging
+            
+            // Get the original entry
+            $originalEntryStmt = $pdo->prepare("SELECT items_added, items_removed FROM inventory_change_entries WHERE id = :id");
+            $originalEntryStmt->execute([':id' => $entry_id]);
+            $originalEntry = $originalEntryStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($originalEntry) {
+                error_log("Found original entry: " . print_r($originalEntry, true)); // Add debug logging
+                // Reverse the original entry's effect on whole_quantity
+                $wholeQuantity = isset($consumable['whole_quantity']) ? (int)$consumable['whole_quantity'] : 0;
+                $wholeQuantity -= (int)$originalEntry['items_added'];
+                $wholeQuantity += (int)$originalEntry['items_removed'];
+                
+                // Now apply the new changes
+                if ($_POST['inventory_action'] === 'add') {
+                    $wholeQuantity += $itemsAdded;
+                } else {
+                    $wholeQuantity -= $itemsRemoved;
+                }
+                
+                // Ensure whole_quantity doesn't go below 0
+                if ($wholeQuantity < 0) {
+                    $wholeQuantity = 0;
+                }
+                
+                // Update the existing entry
+                $stmt = $pdo->prepare("
+                    UPDATE inventory_change_entries 
+                    SET item_short_code = :item_short_code,
+                        item_name = :item_name,
+                        item_description = :item_description,
+                        item_notes = :item_notes,
+                        normal_item_location = :normal_item_location,
+                        reorder_threshold = :reorder_threshold,
+                        items_added = :items_added,
+                        items_removed = :items_removed,
+                        whole_quantity = :whole_quantity,
+                        employee_id = :employee_id
+                    WHERE id = :entry_id
+                ");
+                
+                $stmt->execute([
+                    ':entry_id'              => $entry_id,
+                    ':item_short_code'       => $_POST['item_short_code'],
+                    ':item_name'             => $consumable['item_name'],
+                    ':item_description'      => $consumable['item_description'],
+                    ':item_notes'            => $_POST['item_notes'],
+                    ':normal_item_location'  => $consumable['normal_item_location'],
+                    ':reorder_threshold'     => $_POST['reorder_threshold'],
+                    ':items_added'           => $itemsAdded,
+                    ':items_removed'         => $itemsRemoved,
+                    ':whole_quantity'        => $wholeQuantity,
+                    ':employee_id'           => $_POST['employee_id']
+                ]);
+            }
+        } else {
+            // Insert new entry if not editing
+            $stmt = $pdo->prepare("
+                INSERT INTO inventory_change_entries 
+                        (consumable_material_id, item_short_code, item_name, item_description, item_notes, normal_item_location, reorder_threshold, items_added, items_removed, whole_quantity, employee_id, change_date)
+                VALUES 
+                        (:consumable_material_id, :item_short_code, :item_name, :item_description, :item_notes, :normal_item_location, :reorder_threshold, :items_added, :items_removed, :whole_quantity, :employee_id, NOW())
+            ");
+            
+            $stmt->execute([
+                ':consumable_material_id' => $_POST['consumable_material_id'],
+                ':item_short_code'        => $_POST['item_short_code'],
+                ':item_name'              => $consumable['item_name'],
+                ':item_description'       => $consumable['item_description'],
+                ':item_notes'             => $_POST['item_notes'],
+                ':normal_item_location'   => $consumable['normal_item_location'],
+                ':reorder_threshold'      => $_POST['reorder_threshold'],
+                ':items_added'            => $itemsAdded,
+                ':items_removed'          => $itemsRemoved,
+                ':whole_quantity'         => $wholeQuantity,
+                ':employee_id'            => $_POST['employee_id']
+            ]);
+        }
         
         // Update the whole_quantity in the consumable_materials table
         $updateStmt = $pdo->prepare("
@@ -416,7 +480,7 @@ include 'nav_template.php';
         </div>
         <?php endif; ?>
         
-        <form method="POST" action="inventory_entry.php?consumable_id=<?= htmlspecialchars($consumable_material_id) ?>" id="inventoryForm">
+        <form method="POST" action="<?= $_SERVER['PHP_SELF'] ?>?<?= http_build_query(array_merge($_GET, ['consumable_id' => $consumable_material_id])) ?>" id="inventoryForm">
             <?php if ($editMode && $entryData): ?>
                 <input type="hidden" name="entry_id" value="<?= htmlspecialchars($entryData['id']) ?>">
             <?php endif; ?>
@@ -426,7 +490,6 @@ include 'nav_template.php';
             ?>
             <input type="hidden" name="consumable_material_id" value="<?= htmlspecialchars($consumable_material_id) ?>">
             <input type="hidden" name="item_short_code" value="<?= htmlspecialchars($consumable['item_type'] . '-' . $consumable['id']) ?>">
-            <input type="hidden" name="item_notes" value="">
             <input type="hidden" name="reorder_threshold" value="0">
             <input type="hidden" name="selected_order_id" id="selected_order_id" value="">
             
@@ -498,6 +561,13 @@ include 'nav_template.php';
                             </option>
                         <?php endforeach; ?>
                     </select>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12">
+                    <label for="item_notes" class="form-label">Notes</label>
+                    <textarea class="form-control" name="item_notes" id="item_notes" rows="3" placeholder="Enter any notes about this inventory change"><?= $editMode && $entryData ? htmlspecialchars($entryData['item_notes']) : '' ?></textarea>
                 </div>
             </div>
             

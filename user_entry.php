@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Validate role
-    if (!in_array($user['role'], ['user', 'admin'])) {
+    if (!in_array($user['role'], ['user', 'admin', 'readonly'])) {
         $errors['role'] = "Invalid role selected.";
     }
     
@@ -79,8 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$is_edit || !empty($password)) {
         if (empty($password)) {
             $errors['password'] = "Password is required.";
-        } elseif (strlen($password) < 6) {
-            $errors['password'] = "Password must be at least 6 characters.";
+        } elseif (strlen($password) < 4) {
+            $errors['password'] = "Password must be at least 4 characters.";
         } elseif ($password !== $confirm_password) {
             $errors['confirm_password'] = "Passwords do not match.";
         }
@@ -205,6 +205,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     ?>
 
     <div class="container content-container">
+        <div class="header-section">
+            <h1><?= $is_edit ? 'Edit' : 'Add' ?> User</h1>
+        </div>
+
         <?php if (!empty($success_message)): ?>
             <div class="alert alert-success">
                 <?= htmlspecialchars($success_message) ?>
@@ -241,11 +245,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <select class="form-select <?= isset($errors['role']) ? 'is-invalid' : '' ?>" id="role" name="role" required>
                         <option value="user" <?= $user['role'] === 'user' ? 'selected' : '' ?>>User</option>
                         <option value="admin" <?= $user['role'] === 'admin' ? 'selected' : '' ?>>Administrator</option>
+                        <option value="readonly" <?= $user['role'] === 'readonly' ? 'selected' : '' ?>>Read Only</option>
                     </select>
                     <?php if (isset($errors['role'])): ?>
                         <div class="invalid-feedback"><?= htmlspecialchars($errors['role']) ?></div>
                     <?php endif; ?>
-                    <div class="form-text">Administrators can manage users and have full access to all features.</div>
+                    <div class="form-text">Administrators can manage users and have full access to all features. Read-only users can only view data and use filters.</div>
                 </div>
                 
                 <div class="mb-3">

@@ -15,6 +15,7 @@ try {
     $quantity_ordered = $_POST['quantity_ordered'];
     $notes = $_POST['notes'] ?? '';
     $ordered_by = $_POST['ordered_by'] ?? 'System';
+    $po_number = $_POST['po_number'] ?? null;
 
     // Start transaction
     $pdo->beginTransaction();
@@ -22,15 +23,16 @@ try {
     // Create new order record
     $stmt = $pdo->prepare("
         INSERT INTO order_history 
-        (consumable_id, status_id, quantity_ordered, notes, ordered_by, ordered_at)
-        VALUES (?, ?, ?, ?, ?, NOW())
+        (consumable_id, status_id, quantity_ordered, notes, ordered_by, ordered_at, PO)
+        VALUES (?, ?, ?, ?, ?, NOW(), ?)
     ");
     $stmt->execute([
         $consumable_id,
         $status_id,
         $quantity_ordered,
         $notes,
-        $ordered_by
+        $ordered_by,
+        $po_number
     ]);
 
     // Commit transaction

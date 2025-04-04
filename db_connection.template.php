@@ -48,6 +48,19 @@ try {
         (4, 'Complete', 'Order has been received and inventory updated')
     ");
     
+    // Create users table if it doesn't exist
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS users (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            initials VARCHAR(10) NOT NULL,
+            password VARCHAR(255) NOT NULL,
+            role ENUM('user', 'admin', 'readonly') NOT NULL DEFAULT 'user',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        )
+    ");
+    
 } catch (PDOException $e) {
     die('Database connection failed: ' . $e->getMessage());
 } 

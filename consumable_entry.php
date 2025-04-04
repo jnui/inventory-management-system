@@ -202,7 +202,87 @@ try {
             <input type="number" name="reorder_threshold" id="reorder_threshold" class="form-control" placeholder="Enter quantity at which to reorder" value="<?= htmlspecialchars($consumable['reorder_threshold'] ?? 0) ?>" min="0">
             <div class="form-text">When whole quantity falls below this number, the item will be highlighted in the list.</div>
         </div>
+        <div class="mb-3">
+            <label for="item_notes" class="form-label">Notes</label>
+            <textarea class="form-control" name="item_notes" id="item_notes" rows="3"><?= htmlspecialchars($consumable['item_notes'] ?? '') ?></textarea>
+        </div>
+
+        <!-- Image Upload Section -->
+        <div class="mb-3">
+            <label class="form-label">Item Image</label>
+            <div class="d-flex align-items-center">
+                <?php if (!empty($consumable['image_thumb_50'])): ?>
+                    <img src="<?= htmlspecialchars($consumable['image_thumb_50']) ?>" alt="Item thumbnail" class="me-3" style="max-width: 50px;">
+                <?php endif; ?>
+                <button type="button" class="btn btn-primary" id="uploadImageBtn">
+                    <i class="bi bi-camera"></i> <?= !empty($consumable['image_thumb_50']) ? 'Change Image' : 'Add Image' ?>
+                </button>
+            </div>
+            <input type="file" id="imageInput" accept="image/*" capture="environment" style="display: none;">
+            <input type="hidden" name="image_full" value="<?= htmlspecialchars($consumable['image_full'] ?? '') ?>">
+            <input type="hidden" name="image_thumb_50" value="<?= htmlspecialchars($consumable['image_thumb_50'] ?? '') ?>">
+            <input type="hidden" name="image_thumb_150" value="<?= htmlspecialchars($consumable['image_thumb_150'] ?? '') ?>">
+        </div>
+
         <button type="submit" class="btn btn-success"><?= $editMode ? 'Update' : 'Add' ?> Consumable Material</button>
         <a href="consumable_list.php" class="btn btn-secondary">Cancel</a>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadBtn = document.getElementById('uploadImageBtn');
+    const imageInput = document.getElementById('imageInput');
+    const form = document.querySelector('form');
+    
+    uploadBtn.addEventListener('click', function() {
+        imageInput.click();
+    });
+    
+    imageInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            const formData = new FormData();
+            formData.append('image', e.target.files[0]);
+            formData.append('consumable_id', '<?= $consumable['id'] ?? '' ?>');
+            
+            fetch('scripts/process_image.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update hidden inputs
+                    document.querySelector('input[name="image_full"]').value = data.full_path;
+                    document.querySelector('input[name="image_thumb_50"]').value = data.thumb_50_path;
+                    document.querySelector('input[name="image_thumb_150"]').value = data.thumb_150_path;
+                    
+                    // Update preview
+                    const preview = document.querySelector('.me-3');
+                    if (preview) {
+                        preview.src = data.thumb_50_path;
+                    } else {
+                        const newPreview = document.createElement('img');
+                        newPreview.src = data.thumb_50_path;
+                        newPreview.alt = 'Item thumbnail';
+                        newPreview.className = 'me-3';
+                        newPreview.style.maxWidth = '50px';
+                        uploadBtn.parentNode.insertBefore(newPreview, uploadBtn);
+                    }
+                    
+                    // Update button text
+                    uploadBtn.innerHTML = '<i class="bi bi-camera"></i> Change Image';
+                } else {
+                    alert('Error uploading image: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error uploading image');
+            });
+        }
+    });
+});
+</script>
+</body>
+</html>

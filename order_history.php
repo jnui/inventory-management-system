@@ -42,10 +42,14 @@ $orders = $stmt->fetchAll();
             background-color: #6c757d;
             color: white;
         }
+        .status-complete {
+            background-color: #198754;
+            color: white;
+        }
     </style>
 </head>
 <body>
-    <div class="container-fluid py-4">
+    <div class="container-fluid py-4 mt-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>Order History</h1>
             <a href="ordering.php" class="btn btn-outline-primary">
@@ -65,9 +69,11 @@ $orders = $stmt->fetchAll();
                                 <th>Date</th>
                                 <th>Item Name</th>
                                 <th>Status</th>
+                                <th>PO Number</th>
                                 <th>Quantity Ordered</th>
                                 <th>Notes</th>
                                 <th>Ordered By</th>
+                                <th>Last Updated</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -81,6 +87,7 @@ $orders = $stmt->fetchAll();
                                         'Not Ordered' => 'status-not-ordered',
                                         'Ordered & Waiting' => 'status-ordered',
                                         'Backordered' => 'status-backordered',
+                                        'Complete' => 'status-complete',
                                         default => ''
                                     };
                                     ?>
@@ -88,9 +95,11 @@ $orders = $stmt->fetchAll();
                                         <?= htmlspecialchars($order['status_name']) ?>
                                     </span>
                                 </td>
+                                <td><?= htmlspecialchars($order['PO'] ?? 'N/A') ?></td>
                                 <td><?= htmlspecialchars($order['quantity_ordered']) ?></td>
                                 <td><?= htmlspecialchars($order['notes']) ?></td>
                                 <td><?= htmlspecialchars($order['ordered_by']) ?></td>
+                                <td><?= date('Y-m-d H:i', strtotime($order['last_updated'])) ?></td>
                             </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -115,7 +124,7 @@ $orders = $stmt->fetchAll();
                 info: true,
                 responsive: true,
                 autoWidth: false,
-                order: [[0, 'desc']], // Sort by date descending
+                order: [[6, 'desc']], // Sort by last_updated column (index 6) descending
                 pageLength: 25
             });
         });

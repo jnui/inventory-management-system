@@ -1,4 +1,10 @@
 <?php
+// Include authentication check
+require_once 'auth_check.php';
+
+// Check if user has admin role
+require_admin();
+
 // employee_entry.php
 require_once 'db_connection.php';
 

@@ -81,6 +81,16 @@ require_once 'nav_template.php';
                     </div>
                 </div>
             </a>
+
+            <a href="receiving.php" class="text-decoration-none">
+                <div class="menu-card">
+                    <div class="card-body">
+                        <i class="bi bi-box-seam card-icon"></i>
+                        <h2 class="card-title">Receiving Orders</h2>
+                        <p class="card-text">Process and receive incoming shipments</p>
+                    </div>
+                </div>
+            </a>
         </div>
     </div>
     

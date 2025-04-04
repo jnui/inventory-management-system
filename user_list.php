@@ -90,6 +90,10 @@ try {
     ?>
 
     <div class="container content-container">
+        <div class="header-section">
+            <h1>User Management</h1>
+        </div>
+
         <div class="action-row">
             <a href="user_entry.php" class="btn btn-primary">Add New User</a>
         </div>

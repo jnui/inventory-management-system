@@ -1,0 +1,35 @@
+[02-Apr-2025 11:34:49 America/New_York] PHP Deprecated:  Implicit conversion from float 37.5 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 26
+[02-Apr-2025 11:34:49 America/New_York] PHP Deprecated:  Implicit conversion from float 37.5 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 32
+[02-Apr-2025 11:34:49 America/New_York] PHP Deprecated:  Implicit conversion from float 37.5 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 38
+[02-Apr-2025 11:34:49 America/New_York] PHP Deprecated:  Implicit conversion from float 112.5 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 26
+[02-Apr-2025 11:34:49 America/New_York] PHP Deprecated:  Implicit conversion from float 112.5 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 32
+[02-Apr-2025 11:34:49 America/New_York] PHP Deprecated:  Implicit conversion from float 112.5 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 38
+[02-Apr-2025 11:38:49 America/New_York] PHP Deprecated:  Implicit conversion from float 39.664429530201346 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 26
+[02-Apr-2025 11:38:49 America/New_York] PHP Deprecated:  Implicit conversion from float 39.664429530201346 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 32
+[02-Apr-2025 11:38:49 America/New_York] PHP Deprecated:  Implicit conversion from float 39.664429530201346 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 38
+[02-Apr-2025 11:38:49 America/New_York] PHP Deprecated:  Implicit conversion from float 118.99328859060402 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 26
+[02-Apr-2025 11:38:49 America/New_York] PHP Deprecated:  Implicit conversion from float 118.99328859060402 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 32
+[02-Apr-2025 11:38:50 America/New_York] PHP Deprecated:  Implicit conversion from float 118.99328859060402 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 38
+[02-Apr-2025 11:47:27 America/New_York] Upload directory: /home/smccontr/public_html/materials/uploads/images/
+[02-Apr-2025 11:47:27 America/New_York] Thumb 50 directory: /home/smccontr/public_html/materials/uploads/images/thumb_50/
+[02-Apr-2025 11:47:27 America/New_York] Thumb 150 directory: /home/smccontr/public_html/materials/uploads/images/thumb_150/
+[02-Apr-2025 11:47:27 America/New_York] Web upload path: /materials/uploads/images/
+[02-Apr-2025 11:47:27 America/New_York] Web thumb 50 path: /materials/uploads/images/thumb_50/
+[02-Apr-2025 11:47:27 America/New_York] Web thumb 150 path: /materials/uploads/images/thumb_150/
+[02-Apr-2025 11:47:27 America/New_York] Received file upload: Array
+(
+    [name] => image.jpg
+    [full_path] => image.jpg
+    [type] => image/jpeg
+    [tmp_name] => /tmp/php4vJFcR
+    [error] => 0
+    [size] => 3667553
+)
+
+[02-Apr-2025 11:47:27 America/New_York] Moving uploaded file to: /home/smccontr/public_html/materials/uploads/images/67ed5c0f195b4.jpg
+[02-Apr-2025 11:47:27 America/New_York] PHP Deprecated:  Implicit conversion from float 37.5 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 60
+[02-Apr-2025 11:47:27 America/New_York] PHP Deprecated:  Implicit conversion from float 37.5 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 66
+[02-Apr-2025 11:47:27 America/New_York] PHP Deprecated:  Implicit conversion from float 37.5 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 72
+[02-Apr-2025 11:47:27 America/New_York] PHP Deprecated:  Implicit conversion from float 112.5 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 60
+[02-Apr-2025 11:47:27 America/New_York] PHP Deprecated:  Implicit conversion from float 112.5 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 66
+[02-Apr-2025 11:47:27 America/New_York] PHP Deprecated:  Implicit conversion from float 112.5 to int loses precision in /home/smccontr/public_html/materials/scripts/process_image.php on line 72

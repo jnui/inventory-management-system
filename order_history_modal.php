@@ -191,6 +191,12 @@ if (!$consumable) {
                     </div>
                     
                     <div class="mb-3">
+                        <label for="po_number" class="form-label">PO Number</label>
+                        <input type="text" class="form-control" name="po_number" id="po_number" 
+                               placeholder="Enter purchase order number">
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="new_order_notes" class="form-label">Notes</label>
                         <textarea class="form-control" name="notes" id="new_order_notes" rows="3" 
                                   placeholder="Enter any notes about this order"></textarea>

@@ -19,6 +19,7 @@ try {
                ice.whole_quantity,
                ice.change_date,
                ice.consumable_material_id,
+               ice.item_notes,
                emp.first_name AS employee_name
         FROM inventory_change_entries ice 
         LEFT JOIN item_locations loc ON ice.normal_item_location = loc.id
@@ -50,6 +51,31 @@ try {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <!-- Custom CSS for iPad optimization -->
     <link href="custom.css" rel="stylesheet">
+    <style>
+        .notes-column {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+        }
+        .notes-column.has-content {
+            cursor: pointer;
+        }
+        .notes-column.has-content:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+        .notes-full {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .modal-body {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+    </style>
 </head>
 <body>
 <?php
@@ -78,6 +104,7 @@ include 'nav_template.php';
                 <th>Items Removed</th>
                 <th>Whole Quantity</th>
                 <th>Employee</th>
+                <th>Notes</th>
                 <th>Date</th>
                 <th>Actions</th>
             </tr>
@@ -90,6 +117,10 @@ include 'nav_template.php';
                     $date = new DateTime($entry['change_date']);
                     $formattedDate = $date->format('M j g:ia');
                 }
+                
+                // Format notes
+                $notes = $entry['item_notes'] ?? '';
+                $notesClass = !empty($notes) ? 'notes-column has-content' : 'notes-column';
             ?>
             <tr>
                 <td><?= htmlspecialchars($entry['id']) ?></td>
@@ -101,6 +132,7 @@ include 'nav_template.php';
                 <td><?= htmlspecialchars($entry['items_removed']) ?></td>
                 <td><?= htmlspecialchars($entry['whole_quantity']) ?></td>
                 <td><?= htmlspecialchars($entry['employee_name'] ?? 'N/A') ?></td>
+                <td class="<?= $notesClass ?>" data-full-notes="<?= htmlspecialchars($notes) ?>"><?= htmlspecialchars($notes) ?></td>
                 <td><?= htmlspecialchars($formattedDate) ?></td>
                 <td>
                     <?php if (!empty($entry['consumable_material_id'])): ?>
@@ -112,7 +144,50 @@ include 'nav_template.php';
         </tbody>
     </table>
 </div>
+
+<!-- Notes Modal -->
+<div class="modal fade" id="notesModal" tabindex="-1" aria-labelledby="notesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notesModalLabel">Notes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Bootstrap JS Bundle -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Initialize modal
+    var notesModal = new bootstrap.Modal(document.getElementById('notesModal'));
+    
+    // Add click handlers for notes cells
+    document.querySelectorAll('.notes-column').forEach(function(cell) {
+        if (cell.textContent.trim()) {
+            cell.classList.add('has-content');
+            cell.setAttribute('data-bs-toggle', 'tooltip');
+            cell.setAttribute('data-bs-placement', 'top');
+            cell.setAttribute('title', 'Click to view full notes');
+            
+            cell.addEventListener('click', function() {
+                var modalBody = document.querySelector('#notesModal .modal-body');
+                modalBody.textContent = this.getAttribute('data-full-notes');
+                notesModal.show();
+            });
+        }
+    });
+});
+</script>
 </body>
 </html>

@@ -305,12 +305,12 @@ class NaturalLanguageProcessor {
             
             $stmt->execute([
                 $formData['consumable_material_id'],
-                $current['item_type'] . '-' . $current['id'],
+                $formData['item_short_code'],
                 $current['item_name'],
                 $current['item_description'],
-                $formData['notes'] ?? '',
+                $formData['item_notes'] ?? '',
                 $current['normal_item_location'],
-                $current['reorder_threshold'],
+                $formData['reorder_threshold'] ?? 0,
                 $formData['inventory_action'] === 'add' ? $formData['quantity'] : 0,
                 $formData['inventory_action'] === 'remove' ? $formData['quantity'] : 0,
                 $newInventory,

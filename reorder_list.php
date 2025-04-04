@@ -22,7 +22,12 @@ try {
             cm.*,
             COALESCE(oh.status_id, 1) as order_status_id,
             os.status_name,
-            os.description as status_description
+            os.description as status_description,
+            CASE 
+                WHEN cm.optimum_quantity > 0 AND cm.whole_quantity < (cm.optimum_quantity * 0.5) THEN 'critical'
+                WHEN cm.optimum_quantity > 0 AND cm.whole_quantity < cm.optimum_quantity THEN 'warning'
+                ELSE 'normal'
+            END as stock_level
         FROM consumable_materials cm
         LEFT JOIN order_history oh ON cm.id = oh.consumable_id 
             AND oh.id = (
@@ -52,13 +57,13 @@ try {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Reorder List - Inventory Management System</title>
     <!-- jQuery (required for DataTables) -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <!-- DataTables CSS -->
-    <link href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="custom.css" rel="stylesheet">
     <style>
@@ -83,6 +88,30 @@ try {
             height: auto !important;
             min-height: 40px !important;
             background-color: #fff !important;
+            white-space: normal !important;
+        }
+        
+        /* Column width adjustments */
+        #reorderTable th:nth-child(2), /* Item Name column */
+        #reorderTable td:nth-child(2) {
+            min-width: 300px !important;
+            width: 300px !important;
+        }
+
+        #reorderTable th:nth-child(3), /* Current Stock column */
+        #reorderTable td:nth-child(3),
+        #reorderTable th:nth-child(4), /* Reorder Point column */
+        #reorderTable td:nth-child(4),
+        #reorderTable th:nth-child(5), /* Optimum Qty column */
+        #reorderTable td:nth-child(5) {
+            min-width: 80px !important;
+            width: 80px !important;
+        }
+
+        #reorderTable th:nth-child(6), /* Status column */
+        #reorderTable td:nth-child(6) {
+            min-width: 120px !important;
+            width: 120px !important;
         }
         
         /* Additional styling for DataTables */
@@ -163,7 +192,14 @@ try {
         /* Action buttons cell */
         .action-buttons-cell {
             display: flex;
-            gap: 4px;
+            gap: 2px;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        
+        /* Adjust button padding in actions column */
+        .action-buttons-cell .btn {
+            padding: 0.15rem 0.3rem !important;
         }
         
         /* Mobile-specific styles */
@@ -232,6 +268,14 @@ try {
             .btn-mobile-icon i {
                 font-size: 0.9rem !important;
             }
+            
+            .action-buttons-cell {
+                gap: 1px;
+            }
+            
+            .action-buttons-cell .btn {
+                padding: 0.1rem 0.2rem !important;
+            }
         }
         
         /* Ensure content doesn't get hidden under the navigation bar */
@@ -252,6 +296,16 @@ try {
             border-top: 1px solid #dee2e6 !important;
             z-index: 1000 !important;
             padding: 0px 5px !important;
+        }
+        
+        /* Add to existing styles */
+        .item-name {
+            color: #0d6efd;
+            text-decoration: underline;
+        }
+        .item-name:hover {
+            color: #0a58ca;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -293,43 +347,53 @@ try {
                 <table id="reorderTable" class="table table-striped">
                     <thead>
                         <tr>
+                            <th>ID</th>
                             <th>Item Name</th>
-                            <th>Current Quantity</th>
-                            <th>Reorder Point</th>
+                            <th>Current<br>Stock</th>
+                            <th>Reorder<br>Point</th>
+                            <th>Optimum<br>Qty</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($items as $item): ?>
-                        <tr>
-                            <td>
-                                <a href="consumable_entry.php?id=<?php echo $item['id']; ?>" class="text-decoration-none">
-                                    <?php echo htmlspecialchars($item['item_name'] ?? ''); ?>
-                                </a>
-                            </td>
-                            <td class="<?php echo $item['whole_quantity'] <= $item['reorder_threshold'] ? 'quantity-warning' : ''; ?>">
-                                <?php echo $item['whole_quantity']; ?>
-                            </td>
-                            <td><?php echo $item['reorder_threshold']; ?></td>
-                            <td>
-                                <span class="status-badge status-<?php echo $item['order_status_id']; ?>">
-                                    <?php echo htmlspecialchars($item['status_name'] ?? ''); ?>
-                                </span>
-                            </td>
-                            <td>
-                                <div class="action-buttons-cell">
-                                    <button type="button" class="btn btn-sm btn-outline-primary btn-mobile-icon" 
-                                            onclick="showOrderHistory(<?php echo $item['id']; ?>)">
-                                        <i class="bi bi-clock-history"></i><span class="btn-text">History</span>
-                                    </button>
-                                    <a href="inventory_entry.php?consumable_id=<?php echo $item['id']; ?>" 
-                                       class="btn btn-sm btn-outline-secondary btn-mobile-icon">
-                                        <i class="bi bi-box-arrow-in-down"></i><span class="btn-text">Stock</span>
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
+                        <?php foreach ($items as $item): 
+                            $stockClass = '';
+                            if ($item['stock_level'] === 'critical') {
+                                $stockClass = 'quantity-critical';
+                            } elseif ($item['stock_level'] === 'warning') {
+                                $stockClass = 'quantity-warning';
+                            }
+                        ?>
+                            <tr>
+                                <td><?= htmlspecialchars($item['id']) ?></td>
+                                <td class="item-name" style="cursor: pointer;" 
+                                    onclick="showOrderHistory(<?= $item['id'] ?>)"
+                                    title="Click to view/create order">
+                                    <?= htmlspecialchars($item['item_name']) ?>
+                                </td>
+                                <td class="<?= $stockClass ?>"><?= htmlspecialchars($item['whole_quantity']) ?></td>
+                                <td><?= htmlspecialchars($item['reorder_threshold']) ?></td>
+                                <td><?= htmlspecialchars($item['optimum_quantity']) ?></td>
+                                <td>
+                                    <span class="status-badge status-<?= htmlspecialchars($item['order_status_id']) ?>" 
+                                          title="<?= htmlspecialchars($item['status_description']) ?>">
+                                        <?= htmlspecialchars($item['status_name']) ?>
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="action-buttons-cell">
+                                        <button type="button" class="btn btn-sm btn-outline-primary btn-mobile-icon" 
+                                                onclick="showOrderHistory(<?php echo $item['id']; ?>)">
+                                            <i class="bi bi-clock-history"></i><span class="btn-text">History</span>
+                                        </button>
+                                        <a href="inventory_entry.php?consumable_id=<?php echo $item['id']; ?>" 
+                                           class="btn btn-sm btn-outline-secondary btn-mobile-icon">
+                                            <i class="bi bi-box-arrow-in-down"></i><span class="btn-text">Stock</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
@@ -338,171 +402,42 @@ try {
     </div>
 
     <!-- DataTables Core JS -->
-    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables Bootstrap 5 JS -->
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize DataTables
-        var table = $('#reorderTable').DataTable({
+    $(document).ready(function() {
+        // Initialize DataTable
+        const table = $('#reorderTable').DataTable({
             scrollCollapse: true,
             scrollX: true,
-            paging: false,
+            paging: true,
             ordering: true,
             info: true,
             responsive: true,
             autoWidth: false,
-            dom: 'rt<"d-flex justify-content-between"ip>',
-            order: [[0, 'asc']], // Sort by Item Name by default
-            columnDefs: [
-                { width: "200px", targets: 0 }, // Item Name
-                { width: "100px", targets: 1 }, // Current Quantity
-                { width: "100px", targets: 2 }, // Reorder Point
-                { width: "120px", targets: 3 }, // Status
-                { width: "140px", targets: 4 }  // Actions
-            ]
+            order: [[0, 'asc']], // Sort by ID by default
+            pageLength: 25,
+            initComplete: function() {
+                initializeTableHeight();
+            }
         });
         
-        // Create a container for our action buttons
-        var actionContainer = $('<div class="action-row"></div>');
-        
-        // Create left button group
-        var leftButtons = $('<div class="button-group left-buttons"></div>');
-        leftButtons.append($('<a href="consumable_entry.php" class="btn btn-primary btn-mobile-icon"><i class="bi bi-plus-lg"></i><span class="btn-text"> Add New Material</span></a>'));
-        
-        // Create search group
-        var searchGroup = $('<div class="search-container"></div>');
-        var searchInput = $('<input type="search" class="form-control" placeholder="Search...">');
-        searchGroup.append(searchInput);
-        
-        // Bind search input to DataTables search
-        searchInput.on('keyup', function() {
-            table.search(this.value).draw();
-        });
-        
-        // Create right button group
-        var rightButtons = $('<div class="button-group right-buttons"></div>');
-        rightButtons.append($('<button class="btn btn-info btn-mobile-icon" id="printButton"><i class="bi bi-printer"></i><span class="btn-text"> Print</span></button>'));
-        rightButtons.append($('<button class="btn btn-success btn-mobile-icon" id="excelButton"><i class="bi bi-file-excel"></i><span class="btn-text"> Excel</span></button>'));
-        
-        // Combine all groups
-        actionContainer.append(leftButtons);
-        actionContainer.append(searchGroup);
-        actionContainer.append(rightButtons);
-        
-        // Insert the action container before the table
-        actionContainer.insertBefore('#reorderTable');
-
-        // Add print functionality
-        $('#printButton').on('click', function() {
-            // Create a new window for printing
-            var printWindow = window.open('', '_blank');
-            
-            // Get the table HTML
-            var tableHtml = $('#reorderTable').clone();
-            
-            // Remove the action buttons column
-            tableHtml.find('th:last-child, td:last-child').remove();
-            
-            // Create the print content
-            var printContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Reorder List - Print</title>
-                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-                    <style>
-                        body { padding: 20px; }
-                        .table { width: 100%; }
-                        .table th { background-color: #f8f9fa; }
-                        .status-badge { font-size: 0.875rem; padding: 0.25rem 0.5rem; border-radius: 0.25rem; }
-                        .status-1 { background-color: #ffc107; color: #000; }
-                        .status-2 { background-color: #17a2b8; color: #fff; }
-                        .status-3 { background-color: #dc3545; color: #fff; }
-                        .status-4 { background-color: #28a745; color: #fff; }
-                    </style>
-                </head>
-                <body>
-                    <h2 class="mb-4">Reorder List</h2>
-                    ${tableHtml.prop('outerHTML')}
-                </body>
-                </html>
-            `;
-            
-            // Write the content to the new window
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            
-            // Wait for the content to load before printing
-            printWindow.onload = function() {
-                printWindow.print();
-                printWindow.close();
-            };
-        });
-
-        // Add Excel export functionality
-        $('#excelButton').on('click', function() {
-            // Get the table data
-            var data = table.data().toArray();
-            
-            // Create CSV content
-            var csvContent = "Item Name,Current Quantity,Reorder Point,Status\n";
-            
-            data.forEach(function(row) {
-                var itemName = $(row[0]).text().trim();
-                var currentQuantity = row[1];
-                var reorderPoint = row[2];
-                var status = $(row[3]).text().trim();
-                
-                // Escape commas and quotes in the data
-                itemName = itemName.replace(/"/g, '""');
-                if (itemName.includes(',')) {
-                    itemName = '"' + itemName + '"';
-                }
-                
-                csvContent += `${itemName},${currentQuantity},${reorderPoint},${status}\n`;
-            });
-            
-            // Create a blob and download it
-            var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            var link = document.createElement('a');
-            var url = URL.createObjectURL(blob);
-            
-            link.setAttribute('href', url);
-            link.setAttribute('download', 'reorder_list.csv');
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
-        
-        // Initialize table height
+        // Function to initialize table height
         function initializeTableHeight() {
-            const windowHeight = window.innerHeight;
-            const navbarHeight = 60;
-            const actionRowHeight = $('.action-row').outerHeight();
-            const footerHeight = (window.innerWidth < 768) ? 40 : 50;
-            const padding = (window.innerWidth < 768) ? 10 : 20;
+            const windowHeight = $(window).height();
+            const tableTop = $('#reorderTable').offset().top;
+            const footerHeight = 100; // Adjust based on your footer height
+            const availableHeight = windowHeight - tableTop - footerHeight;
             
-            let availableHeight = windowHeight - navbarHeight - actionRowHeight - footerHeight - padding;
-            
-            if (window.innerWidth < 768) {
-                const minRowsVisible = 5;
-                const approxRowHeight = 45;
-                const minHeight = minRowsVisible * approxRowHeight;
-                availableHeight = Math.max(availableHeight, minHeight);
-            } else {
-                availableHeight = Math.max(availableHeight, 300);
-            }
-            
-            $('.dataTables_scrollBody').css('height', availableHeight + 'px');
-            
-            if (!$('.footer-wrapper').length) {
-                $('.dataTables_info').wrap('<div class="footer-wrapper"></div>');
-            }
-            
-            table.columns.adjust().draw();
+            // Set the container height
+            $('.dataTables_scrollBody').css({
+                'max-height': availableHeight + 'px',
+                'height': availableHeight + 'px'
+            });
         }
         
         // Initialize height after a short delay
@@ -513,6 +448,10 @@ try {
             initializeTableHeight();
         });
     });
+
+    // Global modal variables
+    let statusUpdateModal = null;
+    let newOrderModal = null;
 
     function showOrderHistory(consumableId) {
         // Load the order history modal
@@ -528,68 +467,47 @@ try {
                 const modals = tempDiv.querySelectorAll('.modal');
                 console.log('Found modals:', modals.length);
                 modals.forEach(modal => {
+                    // Remove any existing modal with the same ID
+                    const existingModal = document.getElementById(modal.id);
+                    if (existingModal) {
+                        existingModal.remove();
+                    }
                     document.body.appendChild(modal);
                 });
                 
-                // Wait for Bootstrap to be ready
-                setTimeout(() => {
-                    // Initialize modals
-                    const statusUpdateModalEl = document.getElementById('statusUpdateModal');
-                    const newOrderModalEl = document.getElementById('newOrderModal');
-                    const orderHistoryModalEl = document.getElementById('orderHistoryModal');
+                // Initialize modals
+                const statusUpdateModalEl = document.getElementById('statusUpdateModal');
+                const newOrderModalEl = document.getElementById('newOrderModal');
+                const orderHistoryModalEl = document.getElementById('orderHistoryModal');
+                
+                if (statusUpdateModalEl) {
+                    statusUpdateModal = new bootstrap.Modal(statusUpdateModalEl);
+                }
+                
+                if (newOrderModalEl) {
+                    newOrderModal = new bootstrap.Modal(newOrderModalEl);
+                }
+                
+                if (orderHistoryModalEl) {
+                    const modal = new bootstrap.Modal(orderHistoryModalEl);
+                    modal.show();
                     
-                    console.log('Modal elements found:', {
-                        statusUpdate: !!statusUpdateModalEl,
-                        newOrder: !!newOrderModalEl,
-                        orderHistory: !!orderHistoryModalEl
+                    // Remove all modals when the order history modal is hidden
+                    orderHistoryModalEl.addEventListener('hidden.bs.modal', function () {
+                        modals.forEach(modal => {
+                            modal.remove();
+                        });
+                        // Reset modal variables
+                        statusUpdateModal = null;
+                        newOrderModal = null;
                     });
-                    
-                    if (statusUpdateModalEl) {
-                        statusUpdateModal = new bootstrap.Modal(statusUpdateModalEl);
-                    }
-                    
-                    if (newOrderModalEl) {
-                        newOrderModal = new bootstrap.Modal(newOrderModalEl);
-                        console.log('New order modal initialized');
-                    }
-                    
-                    if (orderHistoryModalEl) {
-                        const modal = new bootstrap.Modal(orderHistoryModalEl);
-                        modal.show();
-                        
-                        // Remove all modals when the order history modal is hidden
-                        orderHistoryModalEl.addEventListener('hidden.bs.modal', function () {
-                            modals.forEach(modal => {
-                                modal.remove();
-                            });
-                        });
-                    }
-
-                    // Bind event handlers for the new order button
-                    const newOrderBtn = document.querySelector('#orderHistoryModal .btn-success');
-                    console.log('New order button found:', !!newOrderBtn);
-                    if (newOrderBtn) {
-                        newOrderBtn.addEventListener('click', function() {
-                            console.log('New order button clicked');
-                            if (newOrderModal) {
-                                console.log('Showing new order modal');
-                                newOrderModal.show();
-                            } else {
-                                console.error('New order modal not initialized');
-                            }
-                        });
-                    }
-                }, 100);
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
                 alert('Error loading order history. Please try again.');
             });
     }
-
-    // Add modal functionality
-    let statusUpdateModal;
-    let newOrderModal;
 
     function showStatusUpdateModal(orderId) {
         if (statusUpdateModal) {
@@ -615,7 +533,11 @@ try {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                statusUpdateModal.hide();
+                // Hide the status update modal
+                if (statusUpdateModal) {
+                    statusUpdateModal.hide();
+                }
+                // Reload the page to show updated status
                 location.reload();
             } else {
                 alert('Error updating status: ' + data.message);
@@ -638,7 +560,11 @@ try {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                newOrderModal.hide();
+                // Hide the new order modal
+                if (newOrderModal) {
+                    newOrderModal.hide();
+                }
+                // Reload the page to show updated status
                 location.reload();
             } else {
                 alert('Error creating order: ' + data.message);
