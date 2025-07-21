@@ -91,6 +91,26 @@ require_once 'nav_template.php';
                     </div>
                 </div>
             </a>
+
+            <a href="po_numbers.php" class="text-decoration-none">
+                <div class="menu-card">
+                    <div class="card-body">
+                        <i class="bi bi-journal-plus card-icon"></i>
+                        <h2 class="card-title">Create PO</h2>
+                        <p class="card-text">Create a new Purchase Order</p>
+                    </div>
+                </div>
+            </a>
+
+            <a href="po_history.php" class="text-decoration-none">
+                <div class="menu-card">
+                    <div class="card-body">
+                        <i class="bi bi-list-ol card-icon"></i>
+                        <h2 class="card-title">PO History</h2>
+                        <p class="card-text">View history of all Purchase Orders</p>
+                    </div>
+                </div>
+            </a>
         </div>
     </div>
     
