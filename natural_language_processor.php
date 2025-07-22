@@ -10,11 +10,24 @@ class NaturalLanguageProcessor {
     
     public function __construct($pdo) {
         $this->pdo = $pdo;
-        $this->openai = OpenAI::client(getenv('OPENAI_API_KEY'));
-        
-        if (!getenv('OPENAI_API_KEY')) {
-            throw new Exception('OPENAI_API_KEY environment variable is not set');
+
+        // Load OpenAI API key from env or fallback config.php
+        $apiKey = getenv('OPENAI_API_KEY');
+        if (!$apiKey) {
+            $configPath = __DIR__ . '/config.php';
+            if (file_exists($configPath)) {
+                $cfg = include $configPath;
+                if (is_array($cfg) && !empty($cfg['openai_api_key'])) {
+                    $apiKey = $cfg['openai_api_key'];
+                }
+            }
         }
+
+        if (!$apiKey) {
+            throw new Exception('OPENAI_API_KEY is not configured. Set environment variable or add openai_api_key in config.php');
+        }
+
+        $this->openai = OpenAI::client($apiKey);
         
         // Initialize item names
         $stmt = $this->pdo->query("SELECT item_name FROM consumable_materials");

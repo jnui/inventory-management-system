@@ -158,6 +158,16 @@ require_once 'auth_check.php';
                     </div>
                 </div>
             </a>
+
+            <a href="consumable_list_inline.php" class="text-decoration-none">
+                <div class="menu-card">
+                    <div class="card-body">
+                        <i class="bi bi-pencil-square card-icon"></i>
+                        <h2 class="card-title">Bulk Edit Consumables</h2>
+                        <p class="card-text">Quickly modify multiple consumable records</p>
+                    </div>
+                </div>
+            </a>
             <?php endif; ?>
         </div>
     </div>

@@ -21,6 +21,7 @@ try {
         SELECT 
             oh.id as order_id,
             oh.quantity_ordered,
+            oh.received_quantity,
             oh.notes as order_notes,
             oh.PO as po_number,
             cm.id as item_id,
@@ -94,26 +95,34 @@ $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         <th>Order ID</th>
                         <th>Item Name</th>
                         <th>PO Number</th>
-                        <th>Ordered Qty</th>
+                        <th>Qty Ordered</th>
+                        <th>Qty Recvd So Far</th>
+                        <th>Qty To Receive</th>
                         <th>Current Stock</th>
                         <th>Reorder Level</th>
-                        <th>Optimum Qty</th>
                         <th>Notes</th>
                         <th>Actions</th>
+                        <th>PO Receive</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php foreach ($orders as $order): ?>
                         <tr>
                             <td><?= htmlspecialchars($order['order_id']) ?></td>
-                            <td><?= htmlspecialchars($order['item_name']) ?></td>
+                            <td>
+                                <?= htmlspecialchars($order['item_name']) ?>
+                                <?php if ($order['received_quantity'] > 0 && $order['received_quantity'] < $order['quantity_ordered']): ?>
+                                    <span class="badge bg-warning text-dark ms-2">Partial Fill</span>
+                                <?php endif; ?>
+                            </td>
                             <td><?= htmlspecialchars($order['po_number'] ?? 'N/A') ?></td>
                             <td class="text-center"><?= htmlspecialchars($order['quantity_ordered']) ?></td>
+                            <td class="text-center"><?= htmlspecialchars($order['received_quantity']) ?></td>
+                            <td class="text-center"><?= htmlspecialchars($order['quantity_ordered'] - $order['received_quantity']) ?></td>
                             <td class="text-center <?= $order['current_quantity'] < $order['reorder_threshold'] ? 'quantity-warning' : 'quantity-good' ?>">
                                 <?= htmlspecialchars($order['current_quantity']) ?>
                             </td>
                             <td class="text-center"><?= htmlspecialchars($order['reorder_threshold']) ?></td>
-                            <td class="text-center"><?= htmlspecialchars($order['optimum_quantity']) ?></td>
                             <td class="notes-cell" onclick="showNotesModal('<?= htmlspecialchars(addslashes($order['item_name'])) ?>', '<?= htmlspecialchars(addslashes($order['order_notes'])) ?>')" title="Click to view full notes">
                                 <?= htmlspecialchars($order['order_notes']) ?>
                             </td>
@@ -125,10 +134,18 @@ $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                                             data-item-id="<?= $order['item_id'] ?>"
                                             data-item-name="<?= htmlspecialchars($order['item_name']) ?>"
                                             data-order-qty="<?= $order['quantity_ordered'] ?>"
+                                            data-received-qty="<?= $order['received_quantity'] ?>"
                                             data-po-number="<?= htmlspecialchars($order['po_number'] ?? 'N/A') ?>">
                                         <i class="bi bi-box-arrow-in-down"></i> Receive
                                     </button>
                                 </div>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if (!empty($order['po_number'])): ?>
+                                    <button type="button" class="btn btn-sm btn-primary po-receive-btn" data-po-number="<?= htmlspecialchars($order['po_number']) ?>">
+                                        PO Receive
+                                    </button>
                                 <?php endif; ?>
                             </td>
                         </tr>
@@ -185,6 +202,11 @@ $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                         </div>
                         
                         <div class="mb-3">
+                            <label class="form-label">Received So Far</label>
+                            <input type="text" class="form-control" id="receivedQtySoFar" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
                             <label for="receivedQuantity" class="form-label">Received Quantity</label>
                             <input type="number" class="form-control" id="receivedQuantity" name="receivedQuantity" required min="0">
                         </div>
@@ -202,6 +224,40 @@ $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- PO Receive Modal -->
+    <div id="poReceiveModal" class="modal fade" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <form id="poReceiveForm" action="bulk_receive.php" method="post">
+            <div class="modal-header">
+              <h5 class="modal-title">Bulk Receive PO <span id="modalPoNumber"></span></h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <input type="hidden" name="po_number" id="formPoNumber">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Item Name</th>
+                    <th>Qty Ordered</th>
+                    <th>Qty Recvd So Far</th>
+                    <th>Qty To Receive</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="poItemsTableBody">
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary">Submit Received</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
     <!-- Bootstrap JS -->
@@ -239,9 +295,11 @@ $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 $('#itemId').val(itemId);
                 $('#itemName').val(itemName);
                 $('#orderedQuantity').val(orderQty);
+                $('#receivedQtySoFar').val(btn.data('received-qty'));
+                var outstanding = orderQty - btn.data('received-qty');
+                if(outstanding < 0) outstanding = 0;
+                $('#receivedQuantity').attr('max', outstanding).val(outstanding);
                 $('#poNumber').val(poNumber || 'N/A');
-                $('#receivedQuantity').val('');  // Clear the field
-                $('#receiveNotes').val('');
                 
                 receiveModal.show();
             });
@@ -279,6 +337,38 @@ $locations = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     error: function() {
                         alert('Error processing the receipt. Please try again.');
                     }
+                });
+            });
+
+            // PO Receive logic
+            $('.po-receive-btn').on('click', function() {
+                var poNumber = $(this).data('po-number');
+                $('#modalPoNumber').text(poNumber);
+                $('#formPoNumber').val(poNumber);
+                $('#poItemsTableBody').empty();
+                $.getJSON('get_po_items.php', { po_number: poNumber }, function(data) {
+                    data.forEach(function(item) {
+                        var isComplete   = item.status_id == 4; // Complete status
+                        var outstanding  = Math.max(item.quantity_ordered - item.received_quantity, 0);
+                        var rowClass     = isComplete ? 'table-success' : (item.received_quantity > 0 ? 'table-warning' : '');
+                        var statusText   = isComplete ? 'Complete' : (item.received_quantity > 0 ? 'Partial' : 'Open');
+                        var qtyInput;
+                        if (isComplete) {
+                            qtyInput = '<input type="number" class="form-control" value="0" disabled>';
+                        } else {
+                            qtyInput = '<input type="number" name="received_qty[' + item.order_id + ']" min="0" max="' + outstanding + '" class="form-control" value="' + outstanding + '">';
+                        }
+                        var rowHtml = '<tr class="' + rowClass + '" data-order-id="' + item.order_id + '">' +
+                            '<td>' + item.item_name + '</td>' +
+                            '<td class="text-center">' + item.quantity_ordered + '</td>' +
+                            '<td class="text-center">' + item.received_quantity + '</td>' +
+                            '<td>' + qtyInput + '</td>' +
+                            '<td class="text-center">' + statusText + '</td>' +
+                        '</tr>';
+                        $('#poItemsTableBody').append(rowHtml);
+                    });
+                    var poModal = new bootstrap.Modal(document.getElementById('poReceiveModal'));
+                    poModal.show();
                 });
             });
         });

@@ -27,6 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Include database connection
         require_once 'db_connection.php';
+        require_once 'lib/inventory_functions.php';
         
         // Get consumable ID from POST data
         if (!isset($_POST['consumable_material_id'])) {
@@ -41,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         // Get the selected consumable material details
         $consumableStmt = $pdo->prepare("
-            SELECT id, item_type, item_name, item_description, normal_item_location, whole_quantity 
+            SELECT id, item_type, item_name, item_description, normal_item_location, whole_quantity, reorder_threshold 
             FROM consumable_materials 
             WHERE id = :id
             FOR UPDATE
@@ -130,41 +131,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ]);
             }
         } else {
-            // Insert new entry if not editing
-            $stmt = $pdo->prepare("
-                INSERT INTO inventory_change_entries 
-                        (consumable_material_id, item_short_code, item_name, item_description, item_notes, normal_item_location, reorder_threshold, items_added, items_removed, whole_quantity, employee_id, change_date)
-                VALUES 
-                        (:consumable_material_id, :item_short_code, :item_name, :item_description, :item_notes, :normal_item_location, :reorder_threshold, :items_added, :items_removed, :whole_quantity, :employee_id, NOW())
-            ");
-            
-            $stmt->execute([
-                ':consumable_material_id' => $_POST['consumable_material_id'],
-                ':item_short_code'        => $_POST['item_short_code'],
-                ':item_name'              => $consumable['item_name'],
-                ':item_description'       => $consumable['item_description'],
-                ':item_notes'             => $_POST['item_notes'],
-                ':normal_item_location'   => $consumable['normal_item_location'],
-                ':reorder_threshold'      => $_POST['reorder_threshold'],
-                ':items_added'            => $itemsAdded,
-                ':items_removed'          => $itemsRemoved,
-                ':whole_quantity'         => $wholeQuantity,
-                ':employee_id'            => $_POST['employee_id']
-            ]);
+            // Apply shared inventory change helper instead of inline logic
+            $deltaWhole = ($itemsAdded > 0) ? $itemsAdded : -$itemsRemoved;
+            $comment = $_POST['item_notes'];
+            apply_inventory_change($pdo, (int)$_POST['consumable_material_id'], $deltaWhole, $_POST['inventory_action'] === 'add' ? 'add' : 'remove', $comment, (int)$_POST['employee_id']);
         }
         
-        // Update the whole_quantity in the consumable_materials table
-        $updateStmt = $pdo->prepare("
-            UPDATE consumable_materials 
-            SET whole_quantity = :whole_quantity 
-            WHERE id = :id
-        ");
-        
-        $updateStmt->execute([
-            ':whole_quantity' => $wholeQuantity,
-            ':id' => $consumable['id']
-        ]);
-
         // If an order was selected and we're adding stock, update that specific order
         if ($_POST['inventory_action'] === 'add' && !empty($_POST['selected_order_id'])) {
             $orderUpdateStmt = $pdo->prepare("
@@ -490,7 +462,7 @@ include 'nav_template.php';
             ?>
             <input type="hidden" name="consumable_material_id" value="<?= htmlspecialchars($consumable_material_id) ?>">
             <input type="hidden" name="item_short_code" value="<?= htmlspecialchars($consumable['item_type'] . '-' . $consumable['id']) ?>">
-            <input type="hidden" name="reorder_threshold" value="0">
+            <input type="hidden" name="reorder_threshold" value="<?= htmlspecialchars($consumable['reorder_threshold']) ?>">
             <input type="hidden" name="selected_order_id" id="selected_order_id" value="">
             
             <!-- Item details row -->

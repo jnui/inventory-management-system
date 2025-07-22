@@ -1,6 +1,7 @@
 <?php
 require_once 'auth_check.php';
 require_once 'db_connection.php';
+require_once 'lib/inventory_functions.php';
 
 // Set content type to JSON
 header('Content-Type: application/json');
@@ -37,39 +38,28 @@ try {
         throw new Exception('Order not found or already processed');
     }
 
-    // Create inventory change entry
-    $inventoryNotes = "Order ID: " . $orderId . "\n" .
-                     "PO Number: " . ($order['PO'] ? $order['PO'] : 'N/A') . "\n" .
-                     "Qty Ordered: " . $order['quantity_ordered'] . "\n" .
-                     "Received: " . $receivedQuantity . "\n" .
-                     "Previous stock: " . $order['current_quantity'] . "\n" .
-                     "New stock: " . ($order['current_quantity'] + $receivedQuantity) . "\n" .
-                     "Receipt notes: " . ($notes ? $notes : "N/A") . "\n" .
-                     "Vendor invoice: N/A";  // We'll add this later
+    // Calculate new received quantity
+    $newReceivedQuantity = $order['received_quantity'] + $receivedQuantity;
+    
+    // Determine if order is fully received
+    $isFullyReceived = $newReceivedQuantity >= $order['quantity_ordered'];
+    $newStatusId = $isFullyReceived ? 4 : 2; // 4 for Complete, 2 for Ordered & Waiting
 
-    $stmt = $pdo->prepare("
-        INSERT INTO inventory_change_entries 
-        (consumable_material_id, item_name, item_notes, items_added, whole_quantity, change_date)
-        VALUES (?, ?, ?, ?, ?, NOW())
-    ");
-    $stmt->execute([$itemId, $order['item_name'], $inventoryNotes, $receivedQuantity, $order['current_quantity'] + $receivedQuantity]);
+    $now = date('Y-m-d H:i:s');
+    $inventoryNotes = "Received on $now\nOrder ID: $orderId\nPO Number: " . ($order['PO'] ?: 'N/A') . "\nQty Ordered: {$order['quantity_ordered']}\nReceived: $receivedQuantity\nTotal Received: $newReceivedQuantity\nReceipt notes: " . ($notes ?: 'N/A');
 
-    // Update inventory quantity
-    $stmt = $pdo->prepare("
-        UPDATE consumable_materials 
-        SET whole_quantity = whole_quantity + ?
-        WHERE id = ?
-    ");
-    $stmt->execute([$receivedQuantity, $itemId]);
+    // Apply inventory change via shared helper
+    apply_inventory_change($pdo, (int)$itemId, (int)$receivedQuantity, 'receive', $inventoryNotes, 28);
 
-    // Mark order as complete (status_id = 4)
+    // Update order with new received quantity and status
     $stmt = $pdo->prepare("
         UPDATE order_history 
-        SET status_id = 4,
+        SET received_quantity = ?,
+            status_id = ?,
             notes = CONCAT(COALESCE(notes, ''), '\n\n', ?)
         WHERE id = ?
     ");
-    $stmt->execute([$inventoryNotes, $orderId]);
+    $stmt->execute([$newReceivedQuantity, $newStatusId, $inventoryNotes, $orderId]);
 
     // Commit transaction
     $pdo->commit();

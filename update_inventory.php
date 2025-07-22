@@ -22,7 +22,7 @@ try {
     // Get current order status and details
     $stmt = $pdo->prepare("
         SELECT oh.status_id, oh.id as order_id, oh.quantity_ordered, oh.ordered_at,
-               cm.item_name, cm.whole_quantity as current_quantity
+               cm.item_name, cm.whole_quantity as current_quantity, oh.PO AS po_number
         FROM order_history oh
         JOIN consumable_materials cm ON oh.consumable_id = cm.id
         WHERE oh.consumable_id = ?
@@ -69,15 +69,17 @@ try {
 
         $stmt = $pdo->prepare("
             INSERT INTO order_history 
-            (consumable_id, status_id, quantity_ordered, notes, ordered_by, ordered_at)
-            VALUES (?, 4, ?, ?, ?, ?)
+            (consumable_id, status_id, quantity_ordered, received_quantity, notes, ordered_by, ordered_at, PO)
+            VALUES (?, 4, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $consumable_id,
+            $order_status['quantity_ordered'],
             $quantity_change,
             $completion_notes,
             $received_by,
-            $delivery_date
+            $delivery_date,
+            $order_status['po_number']
         ]);
     }
 

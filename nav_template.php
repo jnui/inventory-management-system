@@ -46,8 +46,21 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="inventory.php">
+                            <i class="bi bi-clock-history me-1"></i>Inventory Change Log
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="inventory.php">Inventory</a>
                     </li>
+                    <?php if (function_exists('is_admin') && is_admin()): ?>
+                    <li class="nav-item">
+                        <a class="nav-link" href="consumable_list_inline.php">
+                            <i class="bi bi-pencil-square"></i>
+                            Bulk Edit Consumables
+                        </a>
+                    </li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>

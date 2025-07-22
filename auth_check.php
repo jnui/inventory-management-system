@@ -1,20 +1,22 @@
 <?php
 // Set session cookie parameters BEFORE starting the session (if not already started)
 if (session_status() === PHP_SESSION_NONE) {
-    // 3 days in seconds: 259200
+    $lifetime = 259200; // 3 days
+    // Set GC max lifetime BEFORE session start
+    ini_set('session.gc_maxlifetime', $lifetime);
+
+    // Set cookie params before session start
     session_set_cookie_params([
-        'lifetime' => 259200,      // 3 days in seconds
-        'path' => '/',             // Cookie available for entire domain
-        'domain' => '',            // Current domain only
-        'secure' => false,         // Allow both HTTP and HTTPS (change to true if site is HTTPS only)
-        'httponly' => true,        // Cookie not accessible via JavaScript
-        'samesite' => 'Lax'        // Protect against CSRF
+        'lifetime' => $lifetime,
+        'path'     => '/',
+        'domain'   => '',
+        'secure'   => false,
+        'httponly' => true,
+        'samesite' => 'Lax'
     ]);
+
     session_start();
 }
-
-// Ensure PHP's garbage collection is set correctly
-ini_set('session.gc_maxlifetime', 259200); // 3 days to match cookie
 
 // Activity timeout - if user has been inactive for too long, log them out
 // Only activate this if you want to log out inactive users even if their session is still valid

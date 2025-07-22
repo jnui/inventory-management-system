@@ -9,9 +9,10 @@ try {
     // Retrieve consumable materials along with their assigned normal location and most recent change date
     $stmt = $pdo->query("
         SELECT cm.id, cm.item_type, cm.item_name, cm.item_description,
+               cm.diameter,
                loc.location_name AS normal_location,
                cm.item_units_whole, cm.item_units_part,
-               cm.qty_parts_per_whole, cm.composition_description,
+               cm.qty_parts_per_whole, cm.composition_description, cm.vendor,
                cm.whole_quantity, cm.reorder_threshold, cm.optimum_quantity,
                (SELECT MAX(ice.change_date) 
                 FROM inventory_change_entries ice 
@@ -29,6 +30,13 @@ try {
     
     // Debug: Log the data structure
     error_log("Consumables data: " . print_r($consumables, true));
+    
+    // Trim whitespace from composition descriptions to prevent duplicate filter entries
+    foreach ($consumables as &$c) {
+        $c['composition_description'] = trim($c['composition_description']);
+        $c['item_type'] = trim($c['item_type']);
+    }
+    unset($c);
 } catch (PDOException $e) {
     die("Database error: " . $e->getMessage());
 }
@@ -54,9 +62,13 @@ try {
     
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css" rel="stylesheet">
+
+    <link href="assets/css/jquery.dataTables.yadcf.css" rel="stylesheet">
     
     <!-- DataTables Core JS -->
     <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <!-- yadcf JS for column filters -->
+    <script src="js/jquery.dataTables.yadcf.js"></script>
     
     <!-- JSZip for Excel export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -74,6 +86,7 @@ try {
             background-color: #fff !important;
             margin: 0 !important;
             padding: 0 !important;
+           
         }
         
         /* Fix for header text being cut off */
@@ -248,7 +261,7 @@ try {
             height: auto !important;
             min-height: 45px !important;
             line-height: 1.5 !important;
-            padding: 0.5rem !important;
+            padding: 0.2rem 0 0 0rem !important;
         }
         
         /* Style for the dropdown menu */
@@ -281,6 +294,7 @@ try {
             width: 100% !important;
             border-collapse: separate !important;
             border-spacing: 0 !important;
+            table-layout: fixed !important;
         }
         
         /* Ensure header has enough height */
@@ -299,6 +313,22 @@ try {
         /* Ensure the header doesn't overlap with content */
         .dataTables_scrollHead {
             margin-bottom: 5px !important;
+        }
+        
+        /* Sticky filters row (second header row) */
+        #consumablesTable thead tr.sticky-filters {
+            position: sticky;
+            top: 0;
+            z-index: 9;
+            background-color: #fff;
+        }
+        
+        /* Action row sticky under navbar */
+        .action-row {
+            position: sticky;
+           
+            z-index: 900;
+            background-color: #fff;
         }
         
         /* Fix for the last column being cut off */
@@ -421,8 +451,8 @@ try {
             /* Make sure columns have consistent widths */
             .dataTables_scrollHeadInner th,
             .dataTables_scrollBody td {
-                width: auto !important;
-                min-width: auto !important;
+                /* width: auto !important;
+                min-width: auto !important; */
                 box-sizing: border-box !important;
             }
             
@@ -617,7 +647,7 @@ try {
             }
             
             #consumablesTable tbody tr td {
-                padding: 8px 5px !important;
+                padding: 0px 5px !important;
             }
             
             .dataTables_wrapper {
@@ -815,6 +845,38 @@ try {
         .navigation-bar {
             z-index: 1000 !important;
         }
+        
+        /* Compact yadcf dropdown filters */
+        .yadcf-filter-wrapper select.yadcf-filter {
+            font-size: 0.8rem;      /* smaller text */
+            padding: 2px 5px;       /* tighter padding */
+            height: auto;           /* let height follow font */
+            line-height: 1.2;
+        }
+
+        .yadcf-filter-wrapper {
+            margin: 0 4px 4px 0;    /* reduce outer spacing */
+        }
+
+        /* Place yadcf "X" clear button before the select */
+        .yadcf-filter-wrapper{
+            display:inline-flex;       /* line up select + X */
+            align-items:center;        /* vertical centring */
+        }
+
+        .yadcf-filter-reset-button{
+            order:-1;                  /* move before select */
+            margin-right:4px;          /* space between X and select */
+            margin-left:0;
+            font-size:0.8rem;          /* optional: match reduced filter font */
+        }
+
+        @media (max-width: 991px) {
+            #consumablesTable th,
+            #consumablesTable td {
+                min-width: 50px !important;
+            }
+        }
     </style>
     <script>
         $(document).ready(function() {
@@ -895,29 +957,38 @@ try {
                             }
                         }, // Image column
                         { data: 'id', visible: false }, // ID (hidden by default)
-                        { data: 'item_type', visible: false }, // Type (hidden by default)
+                        { data: 'item_type', visible: true, orderable: false }, // Type (shown by default)
                         { data: 'item_name' }, // Name
-                        { data: 'item_description' }, // Description
-                        { data: 'normal_location' }, // Location
+                        { data: 'item_description', visible: false }, // Description
+                        { data: 'diameter', orderable: false,render: function (data) {
+                            if (data === null || data === '' || data === undefined) return '';
+                            return parseFloat(data).toString();   // removes trailing zeroes
+                        } },  // New 'diameter' column added as per plan
+                        { data: 'normal_location' }, // Location, now shifted
                         { data: 'whole_quantity', orderable: true }, // Whole Qty with units
-                        { data: 'reorder_threshold', orderable: true }, // Reorder Threshold
+                        { data: 'reorder_threshold', orderable: false }, // Reorder Threshold
+                        { data: 'composition_description', visible: true, orderable: false }, // Material (displayed default)
+                        { data: 'vendor', visible: false }, // Vendors (hidden default)
                         { data: null, orderable: false } // Actions column
                     ],
                     createdRow: function(row, data, dataIndex) {
                         $(row).attr('id', 'consumable-' + data.id);
                     },
                     columnDefs: [
-                        { width: "30px", targets: 0, className: 'text-center', title: '' }, // Image column with no header text
+                        { width: "90px", targets: 0, className: 'text-center', title: 'Img' }, // Image column
                         { width: "30px", targets: 1, className: 'dt-body-left' }, // ID
-                        { width: "50px", targets: 2, className: 'dt-body-left' }, // Type
+                        { width: "140px", targets: 2, className: 'dt-body-center' }, // Type
                         { width: "230px", targets: 3, className: 'dt-body-left' }, // Name
-                        { width: "250px", targets: 4, className: 'dt-body-left' }, // Description
-                        { width: "100px", targets: 5, className: 'dt-body-center' }, // Location
-                        { width: "100px", targets: 6, className: 'dt-body-center' }, // Whole Qty
-                        { width: "80px", targets: 7, className: 'dt-body-center', title: 'Re-up' }, // Reorder Threshold
-                        { width: "200px", targets: 8, className: 'text-center' }, // Actions column
+                        { width: "200px", targets: 4, className: 'dt-body-left' }, // Description
+                        { width: "100px", targets: 5, className: 'dt-body-center', title: 'Size' }, // Diameter
+                        { width: "80px", targets: 6, className: 'dt-body-center', title: 'Location' }, // Location
+                        { width: "100px", targets: 7, className: 'dt-body-left' }, // Whole Qty
+                        { width: "80px", targets: 8, className: 'dt-body-left', title: 'Re-up' }, // Reorder Threshold
+                        { width: "130px", targets: 9, className: 'dt-body-left' }, // Material
+                        { width: "120px", targets: 10, className: 'dt-body-left' }, // Vendors
+                        { width: "200px", targets: 11, className: 'text-center' }, // Actions column
                         {
-                            targets: 6, // Whole Qty column
+                            targets: 7, // Whole Qty column
                             render: function(data, type, row) {
                                 if (data === null || data === undefined) {
                                     return '0';
@@ -926,7 +997,7 @@ try {
                             }
                         },
                         {
-                            targets: 7, // Reorder Threshold column
+                            targets: 8, // Reorder Threshold column
                             render: function(data, type, row) {
                                 let html = data;
                                 if (row.whole_quantity < row.reorder_threshold && row.pending_orders > 0) {
@@ -936,7 +1007,7 @@ try {
                             }
                         },
                         {
-                            targets: 8, // Actions column
+                            targets: 11, // Actions column
                             render: function(data, type, row) {
                                 return `<div class="action-buttons-cell">
                                     <a href="consumable_entry.php?id=${row.id}" class="btn btn-sm btn-warning">
@@ -944,6 +1015,9 @@ try {
                                     </a>
                                     <a href="inventory_entry.php?consumable_id=${row.id}" class="btn btn-sm btn-warning">
                                         <i class="bi bi-box-arrow-in-down"></i><span class="btn-text">Stock Chg</span>
+                                    </a>
+                                    <a href="inventory.php?id=${row.id}" class="btn btn-sm btn-secondary" title="View Change Log">
+                                        <i class="bi bi-clock-history"></i>
                                     </a>
                                 </div>`;
                             }
@@ -966,8 +1040,8 @@ try {
                             });
                         });
                         
-                        // Force column width recalculation
-                        this.api().columns.adjust();
+                        // Force column width recalculation after paint
+                        setTimeout(() => table.columns.adjust(), 0);
                         
                         // Ensure header and body widths match
                         var headerTable = $(this).closest('.dataTables_wrapper').find('.dataTables_scrollHead table');
@@ -991,8 +1065,25 @@ try {
                                 $('.dropdown-item[data-column="' + index + '"]').removeClass('active');
                             }
                         });
+
+                        // Update dynamic offsets for navbar & action row
+                        function updateOffsets() {
+                            const navH = $('.navbar').outerHeight() || 0;
+                            const actH = $('#consumablesActionRow').outerHeight() || 0;
+                            document.documentElement.style.setProperty('--navbar-height', navH + 'px');
+                            document.documentElement.style.setProperty('--action-height', actH + 'px');
+                        }
+
+                        updateOffsets();
+
+                        $(window).on('resize', updateOffsets);
+                        this.api().on('draw', updateOffsets);
                     },
                     drawCallback: function() {
+                        // Ensure sticky filters row position is updated on each draw
+                        const hdrH = $('#consumablesTable thead tr').first().outerHeight();
+                        $('#consumablesTable thead tr').eq(1).addClass('sticky-filters');
+                        
                         // Check for scroll_to parameter in URL
                         const urlParams = new URLSearchParams(window.location.search);
                         const scrollToId = urlParams.get('scroll_to');
@@ -1068,8 +1159,8 @@ try {
                         
                         applyHighlighting();
                         
-                        // Force column width recalculation after each draw
-                        this.api().columns.adjust();
+                        // Force column width recalculation after each draw (post-paint)
+                        setTimeout(() => table.columns.adjust(), 0);
                         
                         // Ensure header and body alignment
                         var headerTable = $(this).closest('.dataTables_wrapper').find('.dataTables_scrollHead table');
@@ -1098,8 +1189,54 @@ try {
                     }
                 });
 
+                // Initialize yadcf filters (simple select, no select2) for Type, Diameter, Material
+                if (typeof yadcf !== 'undefined') {
+                    yadcf.init(table, [
+                        {
+                            column_number: 2, // Type
+                            filter_type: 'select',
+                            filter_default_label: 'Type...'
+                        },
+                        {
+                            column_number: 5, // Diameter/Size
+                            filter_type: 'select',
+                            filter_default_label: 'Size...',
+                            filter_match_mode: 'exact',
+                            sort_as: 'custom',
+                            sort_as_custom_func: function(a, b) {
+                                return parseFloat(a) - parseFloat(b);
+                            }
+                        },
+                        {
+                            column_number: 9, // Material
+                            filter_type: 'select',
+                            filter_default_label: 'Material...'
+                        }
+                    ]);
+
+                    // Sort diameter filter numerically
+                    function sortDiameterFilter() {
+                        const $sel = $('#yadcf-filter--consumablesTable-5');
+                        if (!$sel.length) return;
+                        const $opts = $sel.find('option').not(':first'); // exclude placeholder
+                        $opts.sort(function(a, b) {
+                            return parseFloat(a.value) - parseFloat(b.value);
+                        });
+                        $sel.append($opts);
+                    }
+
+                    // run once immediately after filters are created
+                    setTimeout(sortDiameterFilter, 0);
+
+                    // keep sorted on every table redraw
+                    table.on('draw', sortDiameterFilter);
+                } else {
+                    console.error('yadcf failed to load');
+                }
+
                 // Create action buttons after table is initialized
-                var actionContainer = $('<div class="action-row"></div>');
+                var actionContainer = $('#consumablesActionRow');
+                actionContainer.empty();
                 var leftButtons = $('<div class="button-group left-buttons"></div>');
                 leftButtons.append($('<a href="consumable_entry.php" class="btn btn-primary btn-mobile-icon"><i class="bi bi-plus-lg"></i><span class="btn-text"> Add New Material</span></a>'));
                 
@@ -1111,14 +1248,17 @@ try {
                         </button>
                         <div class="dropdown-menu p-2" aria-labelledby="columnToggleButton" style="min-width: 200px;">
                             <div><a class="dropdown-item active" data-column="0" href="#">Image</a></div>
-                            <div><a class="dropdown-item active" data-column="1" href="#">ID</a></div>
+                            <div><a class="dropdown-item" data-column="1" href="#">ID</a></div>
                             <div><a class="dropdown-item" data-column="2" href="#">Type</a></div>
                             <div><a class="dropdown-item active" data-column="3" href="#">Name</a></div>
-                            <div><a class="dropdown-item active" data-column="4" href="#">Description</a></div>
-                            <div><a class="dropdown-item active" data-column="5" href="#">Location</a></div>
-                            <div><a class="dropdown-item active" data-column="6" href="#">Qty</a></div>
-                            <div><a class="dropdown-item active" data-column="7" href="#">Reorder Threshold</a></div>
-                            <div><a class="dropdown-item active" data-column="8" href="#">Actions</a></div>
+                            <div><a class="dropdown-item" data-column="4" href="#">Description</a></div>
+                            <div><a class="dropdown-item active" data-column="5" href="#">Diameter</a></div>
+                            <div><a class="dropdown-item active" data-column="6" href="#">Location</a></div>
+                            <div><a class="dropdown-item active" data-column="7" href="#">Qty</a></div>
+                            <div><a class="dropdown-item active" data-column="8" href="#">Reorder Threshold</a></div>
+                            <div><a class="dropdown-item active" data-column="9" href="#">Material</a></div>
+                            <div><a class="dropdown-item" data-column="10" href="#">Vendors</a></div>
+                            <div><a class="dropdown-item active" data-column="11" href="#">Actions</a></div>
                         </div>
                     </div>
                 `;
@@ -1157,9 +1297,6 @@ try {
                 actionContainer.append(leftButtons);
                 actionContainer.append(searchGroup);
                 actionContainer.append(rightButtons);
-                
-                // Insert the action container before the table
-                actionContainer.insertBefore('#consumablesTable');
                 
                 // Now that all elements are rendered, set the table height
                 function initializeTableHeight() {
@@ -1237,17 +1374,26 @@ try {
                             'height': 'auto !important',
                             'min-height': '45px !important'
                         });
+                        $('#consumablesTable thead th').css({
+                            'margin': '0 4px !important'
+                        });
                         
                         $('#consumablesTable tbody tr td').css({
                             'height': 'auto !important',
                             'min-height': '45px !important',
                             'line-height': '1.5 !important',
-                            'padding': '0.5rem !important'
+                            'padding': '0.2rem 0 0.2 0 !important',
+                            'display': 'inline-block !important'
                         });
                     }, 100);
                 });
                 
                 console.log("DataTable initialized successfully");
+                
+                // Re-adjust columns on window resize to keep header aligned
+                $(window).on('resize', function() {
+                    table.columns.adjust();
+                });
                 
                 // Add print functionality
                 $('#printButton').on('click', function() {
@@ -1302,24 +1448,31 @@ try {
                     var data = table.data().toArray();
                     
                     // Create CSV content
-                    var csvContent = "Item Name,Type,Location,Units,Quantity,Reorder Point,Last Updated\n";
+                    var csvContent = "ID,Type,Name,Description,Location,Material,Vendors,Units,Quantity,Reorder Point,Last Updated\n";
                     
-                    data.forEach(function(row) {
-                        var itemName = $(row[0]).text().trim();
-                        var type = row[1];
-                        var location = row[2];
-                        var units = row[3];
-                        var quantity = row[4];
-                        var reorderPoint = row[5];
-                        var lastUpdated = row[6];
-                        
-                        // Escape commas and quotes in the data
-                        itemName = itemName.replace(/"/g, '""');
-                        if (itemName.includes(',')) {
-                            itemName = '"' + itemName + '"';
+                    function escapeCsv(value) {
+                        if (value === null || value === undefined) return '';
+                        value = String(value).replace(/"/g, '""');
+                        if (value.includes(',')) {
+                            value = '"' + value + '"';
                         }
-                        
-                        csvContent += `${itemName},${type},${location},${units},${quantity},${reorderPoint},${lastUpdated}\n`;
+                        return value;
+                    }
+
+                    data.forEach(function(row) {
+                        var id           = row.id;
+                        var type         = row.item_type || '';
+                        var name         = row.item_name || '';
+                        var description  = row.item_description || '';
+                        var location     = row.normal_location || '';
+                        var material     = row.composition_description || '';
+                        var vendor       = row.vendor || '';
+                        var units        = row.item_units_whole || '';
+                        var quantity     = row.whole_quantity || '0';
+                        var reorderPoint = row.reorder_threshold || '0';
+                        var lastUpdated  = row.last_updated || row.updated_at || '';
+
+                        csvContent += `${id},${escapeCsv(type)},${escapeCsv(name)},${escapeCsv(description)},${escapeCsv(location)},${escapeCsv(material)},${escapeCsv(vendor)},${escapeCsv(units)},${quantity},${reorderPoint},${lastUpdated}\n`;
                     });
                     
                     // Create a blob and download it
@@ -1352,12 +1505,12 @@ try {
     ?>
 
     <div class="container content-container">
-        <!-- Action row will be created via JavaScript -->
-        
+        <!-- Toolbar / filters row -->
+        <div id="consumablesActionRow" class="action-row"></div>
         
         <?php if ($consumables): ?>
         <div class="table-responsive" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;">
-            <table id="consumablesTable" class="table table-striped" style="width: 100%;">
+            <table id="consumablesTable" class="table table-striped compact" style="width: 100%;">
                 <thead>
                     <tr>
                         <th></th>
@@ -1365,9 +1518,12 @@ try {
                         <th>Type</th>
                         <th>Name</th>
                         <th>Description</th>
+                        <th>Diameter</th>
                         <th>Location</th>
                         <th>Qty</th>
                         <th>Reorder Threshold</th>
+                        <th>Material</th>
+                        <th>Vendors</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -1390,6 +1546,7 @@ try {
                         <td><?= htmlspecialchars($consumable['item_type']) ?></td>
                         <td><?= htmlspecialchars($consumable['item_name']) ?></td>
                         <td><?= htmlspecialchars($consumable['item_description']) ?></td>
+                        <td><?= htmlspecialchars($consumable['diameter']) ?></td>
                         <td><?= htmlspecialchars($consumable['normal_location']) ?></td>
                         <td><?= htmlspecialchars($consumable['whole_quantity']) ?> <?= htmlspecialchars($consumable['item_units_whole']) ?></td>
                         <td><?= htmlspecialchars($consumable['reorder_threshold']) ?>
@@ -1397,6 +1554,8 @@ try {
                                 <i class="bi bi-cart-check text-primary ms-1" title="<?php echo $consumable['pending_orders']; ?> pending order(s)"></i>
                             <?php endif; ?>
                         </td>
+                        <td><?= htmlspecialchars($consumable['composition_description']) ?></td>
+                        <td><?= htmlspecialchars($consumable['vendor'] ?? '') ?></td>
                         <td>
                             <div class="action-buttons-cell">
                                 <a href="consumable_entry.php?id=<?= htmlspecialchars($consumable['id']) ?>" class="btn btn-sm btn-warning">
@@ -1404,6 +1563,9 @@ try {
                                 </a>
                                 <a href="inventory_entry.php?consumable_id=<?= htmlspecialchars($consumable['id']) ?>" class="btn btn-sm btn-warning">
                                     <i class="bi bi-box-arrow-in-down"></i><span class="btn-text">Stock Chg</span>
+                                </a>
+                                <a href="inventory.php?id=<?= htmlspecialchars($consumable['id']) ?>" class="btn btn-sm btn-secondary" title="View Change Log">
+                                    <i class="bi bi-clock-history"></i>
                                 </a>
                             </div>
                         </td>
