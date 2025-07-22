@@ -161,58 +161,64 @@ try {
         <?php if ($editMode): ?>
             <input type="hidden" name="id" value="<?= htmlspecialchars($consumable['id'] ?? '') ?>">
         <?php endif; ?>
-        <div class="mb-3">
-            <label for="item_type" class="form-label">Item Type</label>
-            <input type="text" name="item_type" id="item_type" class="form-control" placeholder="Enter item type" required value="<?= htmlspecialchars($consumable['item_type'] ?? '') ?>">
-        </div>
-        <div class="mb-3">
-            <label for="item_name" class="form-label">Item Name</label>
-            <input type="text" name="item_name" id="item_name" class="form-control" placeholder="Enter item name" required value="<?= htmlspecialchars($consumable['item_name'] ?? '') ?>">
-        </div>
-        <div class="mb-3">
-            <label for="item_description" class="form-label">Item Description</label>
-            <textarea name="item_description" id="item_description" class="form-control" placeholder="Enter item description"><?= htmlspecialchars($consumable['item_description'] ?? '') ?></textarea>
-        </div>
-        <div class="mb-3">
-            <label for="normal_item_location" class="form-label">Normal Item Location</label>
-            <select name="normal_item_location" id="normal_item_location" class="form-select" required>
-                <option value="">Select Location</option>
-                <?php foreach ($locations as $loc): ?>
-                    <option value="<?= htmlspecialchars($loc['id'] ?? '') ?>" <?= ($loc['id'] == ($consumable['normal_item_location'] ?? null)) ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($loc['location_name'] ?? '') ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="item_units_whole" class="form-label">Units (Whole)</label>
-            <input type="text" name="item_units_whole" id="item_units_whole" class="form-control" placeholder="e.g., each, stick, roll" value="<?= htmlspecialchars($consumable['item_units_whole'] ?? '') ?>">
-        </div>
-        <div class="mb-3">
-            <label for="item_units_part" class="form-label">Units (Part)</label>
-            <input type="text" name="item_units_part" id="item_units_part" class="form-control" placeholder="e.g., feet, inches" value="<?= htmlspecialchars($consumable['item_units_part'] ?? '') ?>">
-        </div>
-        <div class="mb-3">
-            <label for="qty_parts_per_whole" class="form-label">Qty Parts Per Whole</label>
-            <input type="number" name="qty_parts_per_whole" id="qty_parts_per_whole" class="form-control" placeholder="Enter quantity of parts per whole" value="<?= htmlspecialchars($consumable['qty_parts_per_whole'] ?? '') ?>">
-        </div>
-        <div class="mb-3">
-            <label for="composition_description" class="form-label">Composition Description</label>
-            <textarea name="composition_description" id="composition_description" class="form-control" placeholder="Enter composition description"><?= htmlspecialchars($consumable['composition_description'] ?? '') ?></textarea>
-        </div>
-        <div class="mb-3">
-            <label for="reorder_threshold" class="form-label">Reorder Threshold</label>
-            <input type="number" name="reorder_threshold" id="reorder_threshold" class="form-control" placeholder="Enter quantity at which to reorder" value="<?= htmlspecialchars($consumable['reorder_threshold'] ?? 0) ?>" min="0">
-            <div class="form-text">When whole quantity falls below this number, the item will be highlighted in the list.</div>
-        </div>
-        <div class="mb-3">
-            <label for="optimum_quantity" class="form-label">Optimum Quantity</label>
-            <input type="number" name="optimum_quantity" id="optimum_quantity" class="form-control" placeholder="Enter the ideal quantity to have in stock" value="<?= htmlspecialchars($consumable['optimum_quantity'] ?? 0) ?>" min="0">
-            <div class="form-text">The ideal quantity to have in stock after reordering.</div>
-        </div>
-        <div class="mb-3">
-            <label for="item_notes" class="form-label">Notes</label>
-            <textarea class="form-control" name="item_notes" id="item_notes" rows="3"><?= htmlspecialchars($consumable['item_notes'] ?? '') ?></textarea>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="item_type" class="form-label">Item Type</label>
+                    <input type="text" name="item_type" id="item_type" class="form-control" placeholder="Enter item type" required value="<?= htmlspecialchars($consumable['item_type'] ?? '') ?>">
+                </div>
+                <div class="mb-3">
+                    <label for="item_name" class="form-label">Item Name</label>
+                    <input type="text" name="item_name" id="item_name" class="form-control" placeholder="Enter item name" required value="<?= htmlspecialchars($consumable['item_name'] ?? '') ?>">
+                </div>
+                <div class="mb-3">
+                    <label for="item_description" class="form-label">Item Description</label>
+                    <textarea name="item_description" id="item_description" class="form-control" placeholder="Enter item description"><?= htmlspecialchars($consumable['item_description'] ?? '') ?></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="normal_item_location" class="form-label">Normal Item Location</label>
+                    <select name="normal_item_location" id="normal_item_location" class="form-select" required>
+                        <option value="">Select Location</option>
+                        <?php foreach ($locations as $loc): ?>
+                            <option value="<?= htmlspecialchars($loc['id'] ?? '') ?>" <?= ($loc['id'] == ($consumable['normal_item_location'] ?? null)) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($loc['location_name'] ?? '') ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="composition_description" class="form-label">Composition Description</label>
+                    <textarea name="composition_description" id="composition_description" class="form-control" placeholder="Enter composition description"><?= htmlspecialchars($consumable['composition_description'] ?? '') ?></textarea>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="item_units_whole" class="form-label">Units (Whole)</label>
+                    <input type="text" name="item_units_whole" id="item_units_whole" class="form-control" placeholder="e.g., each, stick, roll" value="<?= htmlspecialchars($consumable['item_units_whole'] ?? '') ?>">
+                </div>
+                <div class="mb-3">
+                    <label for="item_units_part" class="form-label">Units (Part)</label>
+                    <input type="text" name="item_units_part" id="item_units_part" class="form-control" placeholder="e.g., feet, inches" value="<?= htmlspecialchars($consumable['item_units_part'] ?? '') ?>">
+                </div>
+                <div class="mb-3">
+                    <label for="qty_parts_per_whole" class="form-label">Qty Parts Per Whole</label>
+                    <input type="number" name="qty_parts_per_whole" id="qty_parts_per_whole" class="form-control" placeholder="Enter quantity of parts per whole" value="<?= htmlspecialchars($consumable['qty_parts_per_whole'] ?? '') ?>">
+                </div>
+                <div class="mb-3">
+                    <label for="reorder_threshold" class="form-label">Reorder Threshold</label>
+                    <input type="number" name="reorder_threshold" id="reorder_threshold" class="form-control" placeholder="Enter quantity at which to reorder" value="<?= htmlspecialchars($consumable['reorder_threshold'] ?? 0) ?>" min="0">
+                    <div class="form-text">When whole quantity falls below this number, the item will be highlighted in the list.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="optimum_quantity" class="form-label">Optimum Quantity</label>
+                    <input type="number" name="optimum_quantity" id="optimum_quantity" class="form-control" placeholder="Enter the ideal quantity to have in stock" value="<?= htmlspecialchars($consumable['optimum_quantity'] ?? 0) ?>" min="0">
+                    <div class="form-text">The ideal quantity to have in stock after reordering.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="item_notes" class="form-label">Notes</label>
+                    <textarea class="form-.form-control" name="item_notes" id="item_notes" rows="3"><?= htmlspecialchars($consumable['item_notes'] ?? '') ?></textarea>
+                </div>
+            </div>
         </div>
 
         <!-- Image Upload Section -->
