@@ -57,7 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         item_units_part = :item_units_part,
                         qty_parts_per_whole = :qty_parts_per_whole,
                         composition_description = :composition_description,
-                        reorder_threshold = :reorder_threshold
+                        reorder_threshold = :reorder_threshold,
+                        optimum_quantity = :optimum_quantity
                     WHERE id = :id
                 ");
                 $stmt->execute([
@@ -70,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':qty_parts_per_whole'  => $_POST['qty_parts_per_whole'] ?? null,
                     ':composition_description' => $_POST['composition_description'] ?? '',
                     ':reorder_threshold'    => $_POST['reorder_threshold'] ?? 0,
+                    ':optimum_quantity'     => $_POST['optimum_quantity'] ?? 0,
                     ':id'                   => $_POST['id']
                 ]);
                 
@@ -80,9 +82,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Otherwise, perform an INSERT.
                 $stmt = $pdo->prepare("
                     INSERT INTO consumable_materials 
-                        (item_type, item_name, item_description, normal_item_location, item_units_whole, item_units_part, qty_parts_per_whole, composition_description, reorder_threshold)
+                        (item_type, item_name, item_description, normal_item_location, item_units_whole, item_units_part, qty_parts_per_whole, composition_description, reorder_threshold, optimum_quantity)
                     VALUES 
-                        (:item_type, :item_name, :item_description, :normal_item_location, :item_units_whole, :item_units_part, :qty_parts_per_whole, :composition_description, :reorder_threshold)
+                        (:item_type, :item_name, :item_description, :normal_item_location, :item_units_whole, :item_units_part, :qty_parts_per_whole, :composition_description, :reorder_threshold, :optimum_quantity)
                 ");
                 $stmt->execute([
                     ':item_type'            => $_POST['item_type'],
@@ -93,7 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':item_units_part'      => $_POST['item_units_part'] ?? '',
                     ':qty_parts_per_whole'  => $_POST['qty_parts_per_whole'] ?? null,
                     ':composition_description' => $_POST['composition_description'] ?? '',
-                    ':reorder_threshold'    => $_POST['reorder_threshold'] ?? 0
+                    ':reorder_threshold'    => $_POST['reorder_threshold'] ?? 0,
+                    ':optimum_quantity'     => $_POST['optimum_quantity'] ?? 0
                 ]);
                 
                 // Get the ID of the newly inserted item
@@ -201,6 +204,11 @@ try {
             <label for="reorder_threshold" class="form-label">Reorder Threshold</label>
             <input type="number" name="reorder_threshold" id="reorder_threshold" class="form-control" placeholder="Enter quantity at which to reorder" value="<?= htmlspecialchars($consumable['reorder_threshold'] ?? 0) ?>" min="0">
             <div class="form-text">When whole quantity falls below this number, the item will be highlighted in the list.</div>
+        </div>
+        <div class="mb-3">
+            <label for="optimum_quantity" class="form-label">Optimum Quantity</label>
+            <input type="number" name="optimum_quantity" id="optimum_quantity" class="form-control" placeholder="Enter the ideal quantity to have in stock" value="<?= htmlspecialchars($consumable['optimum_quantity'] ?? 0) ?>" min="0">
+            <div class="form-text">The ideal quantity to have in stock after reordering.</div>
         </div>
         <div class="mb-3">
             <label for="item_notes" class="form-label">Notes</label>
