@@ -11,7 +11,7 @@ if (empty($searchTerm)) {
 }
 
 $stmt = $pdo->prepare("
-    SELECT id, item_name, whole_quantity 
+    SELECT id, item_name, whole_quantity, optimum_quantity, reorder_threshold 
     FROM consumable_materials 
     WHERE item_name LIKE ?
     LIMIT 20
@@ -24,7 +24,9 @@ foreach ($items as $item) {
     $results[] = [
         'id' => $item['id'],
         'text' => $item['item_name'],
-        'stock' => $item['whole_quantity']
+        'stock' => $item['whole_quantity'],
+        'top_up_qty' => $item['optimum_quantity'],
+        'reup_qty' => $item['reorder_threshold']
     ];
 }
 

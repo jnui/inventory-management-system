@@ -22,6 +22,19 @@ if (isset($_GET['finish'])) {
     exit;
 }
 
+// Cancel PO and clear session
+if (isset($_GET['cancel'])) {
+    if (isset($_SESSION['po_number'])) {
+        $po_to_cancel = $_SESSION['po_number'];
+        $stmt = $pdo->prepare("DELETE FROM order_history WHERE PO = ?");
+        $stmt->execute([$po_to_cancel]);
+    }
+    unset($_SESSION['po_number']);
+    unset($_SESSION['vendor']);
+    header("Location: po_numbers.php?canceled=true");
+    exit;
+}
+
 // Step 1: Create a new PO number
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_po'])) {
     $po_number = trim($_POST['po_number']);
@@ -115,6 +128,9 @@ require_once 'nav_template.php';
         <?php if (isset($_GET['finished'])): ?>
             <div class="alert alert-success">Purchase Order created successfully!</div>
         <?php endif; ?>
+        <?php if (isset($_GET['canceled'])): ?>
+            <div class="alert alert-info">Purchase Order has been canceled.</div>
+        <?php endif; ?>
 
 
         <?php if ($step === 1): ?>
@@ -188,6 +204,7 @@ require_once 'nav_template.php';
                 </table>
                 <?php endif; ?>
                 <a href="po_numbers.php?finish=true" class="btn btn-primary mt-3">Finish PO</a>
+                <a href="po_numbers.php?cancel=true" class="btn btn-danger mt-3" onclick="return confirm('Are you sure you want to cancel this PO? All added items will be removed.')">Cancel PO</a>
             </div>
         </div>
         <?php endif; ?>
@@ -235,7 +252,7 @@ require_once 'nav_template.php';
             );
 
             $container.find(".select2-result-repository__title").text(repo.text);
-            $container.find(".select2-result-repository__description").text("Current Stock: " + repo.stock);
+            $container.find(".select2-result-repository__description").text("Current Stock: " + repo.stock + " | Re-up qty: " + repo.reup_qty + " | Top Up qty: " + repo.top_up_qty);
 
             return $container;
         }
