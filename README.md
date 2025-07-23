@@ -71,4 +71,13 @@ The system includes detailed instruction manuals:
 
 ## License
 
-[MIT License](LICENSE) 
+[MIT License](LICENSE)
+
+## Error Logging
+
+Error logging is configured in `db_connection.php`. By default, it is set to log only critical PHP errors to the `error_log` file in the root directory, and to not display errors to the user.
+
+During development, some files had explicit logging statements to debug database queries and other data. These have been commented out to prevent the `error_log` file from becoming too large. If you need to re-enable this verbose logging for debugging purposes, you can find the commented-out `error_log()` calls in the following files:
+
+- `inventory_entry.php`
+- `consumable_list.php` 
