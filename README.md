@@ -34,10 +34,12 @@ A web-based inventory management system for tracking consumable materials, manag
 ## Features
 
 - Track consumable materials inventory
-- Monitor stock levels and reorder thresholds
+- Monitor stock levels and reorder thresholds as well as ideal qty amounts
 - Manage orders and order history
-- Natural language inventory updates
+- Natural language inventory updates (experimental)
 - Print and export inventory reports
+- Create POs that can later be compared when receiving shipments
+- Bulk recieve using POs
 
 ## Security Notes
 
