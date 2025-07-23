@@ -29,7 +29,7 @@ try {
     $consumables = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     // Debug: Log the data structure
-    error_log("Consumables data: " . print_r($consumables, true));
+    // error_log("Consumables data: " . print_r($consumables, true));
     
     // Trim whitespace from composition descriptions to prevent duplicate filter entries
     foreach ($consumables as &$c) {

@@ -1,4 +1,9 @@
 <?php
+// Disable verbose logging - only log default PHP errors
+error_reporting(E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_ERROR | E_PARSE | E_USER_ERROR | E_RECOVERABLE_ERROR);
+ini_set('log_errors', '1');
+ini_set('display_errors', '0');
+
 // Database credentials - update these with your web server's credentials
 $host    = getenv('DB_HOST') ?: 'localhost';
 $db      = getenv('DB_NAME') ?: 'smccontr_inventory';

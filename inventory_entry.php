@@ -23,7 +23,7 @@ $consumable_material_id = $_GET['id'] ?? $_GET['consumable_id'];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         // Debug log the POST data
-        error_log("POST data received: " . print_r($_POST, true));
+        // error_log("POST data received: " . print_r($_POST, true));
         
         // Include database connection
         require_once 'db_connection.php';
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $originalEntry = $originalEntryStmt->fetch(PDO::FETCH_ASSOC);
             
             if ($originalEntry) {
-                error_log("Found original entry: " . print_r($originalEntry, true)); // Add debug logging
+                // error_log("Found original entry: " . print_r($originalEntry, true)); // Add debug logging
                 // Reverse the original entry's effect on whole_quantity
                 $wholeQuantity = isset($consumable['whole_quantity']) ? (int)$consumable['whole_quantity'] : 0;
                 $wholeQuantity -= (int)$originalEntry['items_added'];
